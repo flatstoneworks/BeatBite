@@ -1,0 +1,10 @@
+{
+  "project": "Beatbite-React",
+  "basePort": 9020,
+  "range": 10,
+  "allocated": {
+    "main": 9020,
+    "api": 9021,
+    "websocket": 9022
+  }
+}
