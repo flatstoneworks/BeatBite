@@ -1,34 +1,29 @@
 import { useGuidedFlow } from '../../hooks/useGuidedFlow';
-import { DrumIcon, BassIcon, GuitarIcon, VoiceIcon, RecordIcon } from '../components/Icons';
+import { RecordIcon } from '../components/Icons';
 
 /**
- * RecordScreen - Main landing page with "Start your new Song" button.
- * Shader Lab design style with tech icons.
+ * RecordScreen - Main landing page with "Tap to Start" button.
+ * Matches Library screen header structure.
  */
 export function RecordScreen() {
   const { start: startGuidedFlow } = useGuidedFlow();
 
   return (
-    <div className="flex flex-col min-h-full px-6 pb-20 relative">
-      {/* Animated background gradient */}
+    <div className="h-full w-full bg-[#050505] flex flex-col relative">
       <div className="bg-shader-gradient" />
 
-      {/* Header */}
-      <div className="pt-8 pb-4 relative z-10">
-        <span className="badge-shader text-[#00ffff]">BEATBITE</span>
+      {/* Header - same structure as LibraryScreen */}
+      <div className="px-6 pt-8 pb-0 relative z-10">
+        <div className="flex items-center gap-3 mb-4">
+          <RecordIcon size={24} color="#00ffff" />
+          <h1 className="text-xl font-bold text-white font-mono uppercase tracking-wider">
+            Record
+          </h1>
+        </div>
       </div>
 
-      {/* Main content - centered */}
-      <div className="flex-1 flex flex-col items-center justify-center relative z-10">
-        {/* Tagline */}
-        <h1 className="text-gradient text-4xl font-bold mb-4 text-center">
-          Create Music
-        </h1>
-        <p className="text-[#888888] text-base mb-12 text-center max-w-xs">
-          Transform your voice into drums, bass, guitar, and melodies
-        </p>
-
-        {/* Big circular button with record icon */}
+      {/* Main content - centered big button */}
+      <div className="flex-1 flex flex-col items-center justify-center relative z-10 px-6">
         <button
           onClick={startGuidedFlow}
           className="
@@ -66,37 +61,10 @@ export function RecordScreen() {
           </div>
         </button>
 
-        {/* Start label */}
         <p className="mt-8 text-[#888888] text-sm font-mono uppercase tracking-widest">
           Tap to Start
         </p>
       </div>
-
-      {/* Bottom card with features */}
-      <div className="card-shader p-5 mb-4 relative z-10">
-        <div className="flex items-center justify-around">
-          <FeatureItem icon={<DrumIcon size={28} color="#00ffff" />} label="Drums" color="#00ffff" />
-          <FeatureItem icon={<BassIcon size={28} color="#3b82f6" />} label="Bass" color="#3b82f6" />
-          <FeatureItem icon={<GuitarIcon size={28} color="#22c55e" />} label="Guitar" color="#22c55e" />
-          <FeatureItem icon={<VoiceIcon size={28} color="#a855f7" />} label="Voice" color="#a855f7" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FeatureItem({ icon, label, color }: { icon: React.ReactNode; label: string; color: string }) {
-  return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="w-12 h-12 rounded-xl bg-[#0a0a0a] border border-[#222222] flex items-center justify-center">
-        {icon}
-      </div>
-      <span
-        className="text-xs font-mono uppercase tracking-wider"
-        style={{ color }}
-      >
-        {label}
-      </span>
     </div>
   );
 }

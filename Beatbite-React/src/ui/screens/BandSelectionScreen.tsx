@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useAppStore } from '../../core/store';
 import { useGuidedFlow } from '../../hooks/useGuidedFlow';
+import { FlowHeader } from '../components/FlowHeader';
 import { DrumIcon, BassIcon, GuitarIcon, PianoIcon, VoiceIcon } from '../components/Icons';
 import type { Band } from '../../core/BandStorage';
 
@@ -16,7 +17,7 @@ export function BandSelectionScreen() {
   const bands = useAppStore((state) => state.bands);
   const selectBandAction = useAppStore((state) => state.selectBand);
   const startNewBandCreationAction = useAppStore((state) => state.startNewBandCreation);
-  const { exit, goToStep } = useGuidedFlow();
+  const { goToStep } = useGuidedFlow();
 
   const hasBands = bands.length > 0;
 
@@ -33,28 +34,19 @@ export function BandSelectionScreen() {
   }, [startNewBandCreationAction, goToStep]);
 
   return (
-    <div className="h-full w-full bg-black flex flex-col select-none relative">
-      {/* Back/Exit button */}
-      <button
-        className="absolute top-4 left-4 p-2 text-white/50 hover:text-white transition-colors z-10"
-        onClick={exit}
-      >
-        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
+    <div className="h-full w-full bg-[#050505] flex flex-col relative">
+      <div className="bg-shader-gradient" />
+
+      <FlowHeader />
 
       {/* Content */}
-      <div className="flex-1 flex flex-col px-6 pt-16 pb-8 overflow-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-white mb-2">Select Your Band</h1>
-          <p className="text-white/50 text-sm">
-            {hasBands
-              ? 'Choose a band or create a new one'
-              : 'Create your first band to get started'}
-          </p>
-        </div>
+      <div className="flex-1 flex flex-col px-6 pb-8 overflow-auto relative z-10">
+        {/* Subtitle */}
+        <p className="text-[#666666] text-sm font-mono mb-6">
+          {hasBands
+            ? 'Choose a band or create a new one'
+            : 'Create your first band to get started'}
+        </p>
 
         {/* Band list */}
         {hasBands && (
@@ -74,11 +66,12 @@ export function BandSelectionScreen() {
           onClick={handleStartNewBand}
           className="
             w-full p-4 rounded-xl
-            border-2 border-dashed border-white/20
-            hover:border-cyan-500/50 hover:bg-cyan-500/5
+            border-2 border-dashed border-[#333333]
+            hover:border-[#00ffff]/50 hover:bg-[#00ffff]/5
             transition-all duration-200
             flex items-center justify-center gap-3
-            text-white/70 hover:text-cyan-400
+            text-[#888888] hover:text-[#00ffff]
+            font-mono
           "
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -90,8 +83,8 @@ export function BandSelectionScreen() {
         {/* Empty state message */}
         {!hasBands && (
           <div className="flex-1 flex flex-col items-center justify-center text-center px-8 mt-8">
-            <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-6">
-              <svg className="w-12 h-12 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-24 h-24 rounded-full bg-[#0a0a0a] border border-[#222222] flex items-center justify-center mb-6">
+              <svg className="w-12 h-12 text-[#333333]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -100,8 +93,8 @@ export function BandSelectionScreen() {
                 />
               </svg>
             </div>
-            <h2 className="text-white/60 text-lg font-medium mb-2">No Bands Yet</h2>
-            <p className="text-white/40 text-sm">
+            <h2 className="text-[#888888] text-lg font-mono mb-2">No Bands Yet</h2>
+            <p className="text-[#666666] text-sm font-mono">
               A band is your personal instrument configuration.
               <br />
               Create one to save your drum kit, bass, guitar,
@@ -130,16 +123,16 @@ function BandCard({ band, onSelect }: { band: Band; onSelect: () => void }) {
       onClick={onSelect}
       className="
         w-full p-4 rounded-xl
-        bg-white/5 hover:bg-white/10
-        border border-white/10 hover:border-cyan-500/30
+        bg-[#0a0a0a] hover:bg-[#00ffff]/5
+        border border-[#1a1a1a] hover:border-[#00ffff]/30
         transition-all duration-200
         text-left
       "
     >
       {/* Band name and date */}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-white font-semibold text-lg">{band.name}</h3>
-        <span className="text-white/30 text-xs">{formatDate(band.updatedAt)}</span>
+        <h3 className="text-white font-mono font-bold text-lg">{band.name}</h3>
+        <span className="text-[#444444] text-xs font-mono">{formatDate(band.updatedAt)}</span>
       </div>
 
       {/* Instrument preview */}
@@ -189,7 +182,7 @@ function InstrumentBadge({
   return (
     <div className="flex items-center gap-1.5">
       {icon}
-      <span className="text-xs capitalize" style={{ color: `${color}99` }}>
+      <span className="text-xs font-mono capitalize" style={{ color: `${color}99` }}>
         {label}
       </span>
     </div>

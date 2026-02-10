@@ -128,6 +128,7 @@ export function RecordingScreen() {
       if (elapsedIntervalRef.current) {
         clearInterval(elapsedIntervalRef.current);
       }
+      audioEngine.stopPassthrough();
     };
   }, [selectedBpm, activeBand]);
 
@@ -290,12 +291,7 @@ export function RecordingScreen() {
       <div className="bg-shader-gradient" />
 
       {/* Header */}
-      <FlowHeader
-        currentStep={`Record ${config.name}`}
-        showBack={phase === 'ready'}
-        showClose={phase === 'ready'}
-        isRecording={phase === 'recording' || phase === 'countdown'}
-      />
+      <FlowHeader disableNavigation={phase === 'recording' || phase === 'countdown'} />
 
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center relative z-10 px-6">

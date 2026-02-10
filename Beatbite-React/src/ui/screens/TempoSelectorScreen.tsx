@@ -3,7 +3,7 @@ import { metronomeAudio } from '../../core/MetronomeAudio';
 import { audioEngine } from '../../core/AudioEngine';
 import { useAppStore, useSelectedBpm } from '../../core/store';
 import { useGuidedFlow } from '../../hooks/useGuidedFlow';
-import { ActiveBandHeader } from '../components/ActiveBandHeader';
+import { FlowHeader } from '../components/FlowHeader';
 import { clsx } from 'clsx';
 
 /**
@@ -27,7 +27,7 @@ interface TempoSelectorScreenProps {
 export function TempoSelectorScreen({ audioContext: propAudioContext, onTempoConfirmed }: TempoSelectorScreenProps = {}) {
   const selectedBpm = useSelectedBpm();
   const { setSelectedBpm, confirmTempo, setCurrentMetronomeBeat } = useAppStore();
-  const { goToStep, advance, exit } = useGuidedFlow();
+  const { advance } = useGuidedFlow();
 
   // Use prop audioContext if provided, otherwise get from audioEngine
   const [audioContext, setAudioContext] = useState<AudioContext | null>(propAudioContext || null);
@@ -150,21 +150,6 @@ export function TempoSelectorScreen({ audioContext: propAudioContext, onTempoCon
     }
   }, [confirmTempo, onTempoConfirmed, selectedBpm, advance]);
 
-  // Handle back (for guided flow mode)
-  const handleBack = useCallback(() => {
-    metronomeAudio.stop();
-    setIsMetronomePlaying(false);
-    // Go back to band selection
-    goToStep('band-select');
-  }, [goToStep]);
-
-  // Handle exit (close button)
-  const handleExit = useCallback(() => {
-    metronomeAudio.stop();
-    setIsMetronomePlaying(false);
-    exit();
-  }, [exit]);
-
   // Adjust BPM with buttons
   const adjustBpm = useCallback((delta: number) => {
     setSelectedBpm(Math.max(60, Math.min(200, selectedBpm + delta)));
@@ -207,46 +192,18 @@ export function TempoSelectorScreen({ audioContext: propAudioContext, onTempoCon
   const isGuidedFlowMode = !onTempoConfirmed;
 
   return (
-    <div className="h-full w-full bg-black flex flex-col select-none relative">
-      {/* Band header (only in guided flow mode) */}
-      {isGuidedFlowMode && <ActiveBandHeader />}
+    <div className="h-full w-full bg-[#050505] flex flex-col select-none relative">
+      <div className="bg-shader-gradient" />
+
+      {isGuidedFlowMode && <FlowHeader />}
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col items-center justify-center relative">
-        {/* Navigation buttons (only in guided flow mode) */}
-        {isGuidedFlowMode && (
-          <>
-            {/* Back button */}
-            <button
-              className="absolute top-4 left-4 p-2 text-white/50 hover:text-white transition-colors"
-              onClick={handleBack}
-            >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            {/* Close button */}
-            <button
-              className="absolute top-4 right-4 p-2 text-white/50 hover:text-white transition-colors"
-              onClick={handleExit}
-            >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </>
-        )}
-
-        {/* Title */}
-        <div className="text-white/50 text-sm uppercase tracking-widest mb-8">
-          Set Your Tempo
-        </div>
-
+      <div className="flex-1 flex flex-col items-center justify-center relative z-10">
         {/* BPM Display - draggable area */}
         <div
           className={clsx(
             "relative cursor-ew-resize px-16 py-8 rounded-2xl transition-colors",
-            isDragging ? "bg-purple-900/30" : "hover:bg-white/5"
+            isDragging ? "bg-[#ff00ff]/10" : "hover:bg-[#0a0a0a]"
           )}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
@@ -256,12 +213,12 @@ export function TempoSelectorScreen({ audioContext: propAudioContext, onTempoCon
           onTouchEnd={handleTouchEnd}
         >
           {/* Drag hint arrows */}
-          <div className="absolute left-2 top-1/2 -translate-y-1/2 text-white/20">
+          <div className="absolute left-2 top-1/2 -translate-y-1/2 text-[#333333]">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </div>
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 text-white/20">
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 text-[#333333]">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
@@ -269,35 +226,35 @@ export function TempoSelectorScreen({ audioContext: propAudioContext, onTempoCon
 
           {/* Large BPM number */}
           <div className="text-center">
-            <div className="text-8xl font-bold text-white tabular-nums">
+            <div className="text-8xl font-bold text-white tabular-nums font-mono">
               {selectedBpm}
             </div>
-            <div className="text-lg text-white/50 mt-2">BPM</div>
+            <div className="text-lg text-[#666666] font-mono mt-2">BPM</div>
           </div>
         </div>
 
         {/* Fine adjustment buttons */}
         <div className="flex items-center gap-4 mt-6">
           <button
-            className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+            className="w-12 h-12 rounded-full bg-[#0a0a0a] border border-[#222222] hover:border-[#00ffff]/30 flex items-center justify-center text-white font-mono transition-colors"
             onClick={() => adjustBpm(-5)}
           >
             <span className="text-lg font-bold">-5</span>
           </button>
           <button
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+            className="w-10 h-10 rounded-full bg-[#0a0a0a] border border-[#222222] hover:border-[#00ffff]/30 flex items-center justify-center text-white font-mono transition-colors"
             onClick={() => adjustBpm(-1)}
           >
             <span className="text-sm font-bold">-1</span>
           </button>
           <button
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+            className="w-10 h-10 rounded-full bg-[#0a0a0a] border border-[#222222] hover:border-[#00ffff]/30 flex items-center justify-center text-white font-mono transition-colors"
             onClick={() => adjustBpm(1)}
           >
             <span className="text-sm font-bold">+1</span>
           </button>
           <button
-            className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+            className="w-12 h-12 rounded-full bg-[#0a0a0a] border border-[#222222] hover:border-[#00ffff]/30 flex items-center justify-center text-white font-mono transition-colors"
             onClick={() => adjustBpm(5)}
           >
             <span className="text-lg font-bold">+5</span>
@@ -305,7 +262,7 @@ export function TempoSelectorScreen({ audioContext: propAudioContext, onTempoCon
         </div>
 
         {/* BPM range indicator */}
-        <div className="mt-4 text-white/30 text-xs">
+        <div className="mt-4 text-[#444444] text-xs font-mono">
           60 — 200 BPM
         </div>
 
@@ -318,13 +275,19 @@ export function TempoSelectorScreen({ audioContext: propAudioContext, onTempoCon
                 "rounded-full transition-all duration-75",
                 beat === 0 ? "w-5 h-5" : "w-4 h-4",
                 isMetronomePlaying && currentBeat === beat
-                  ? beat === 0
-                    ? "bg-purple-500 scale-125"
-                    : "bg-purple-400 scale-110"
+                  ? "scale-125"
                   : beat === 0
-                    ? "bg-white/40"
-                    : "bg-white/20"
+                    ? "bg-[#333333]"
+                    : "bg-[#222222]"
               )}
+              style={isMetronomePlaying && currentBeat === beat ? {
+                background: beat === 0
+                  ? 'linear-gradient(135deg, #00ffff 0%, #ff00ff 100%)'
+                  : '#00ffff',
+                boxShadow: beat === 0
+                  ? '0 0 20px rgba(0, 255, 255, 0.5)'
+                  : '0 0 15px rgba(0, 255, 255, 0.3)',
+              } : undefined}
             />
           ))}
         </div>
@@ -332,10 +295,10 @@ export function TempoSelectorScreen({ audioContext: propAudioContext, onTempoCon
         {/* Metronome toggle */}
         <button
           className={clsx(
-            "mt-8 px-8 py-3 rounded-full flex items-center gap-3 transition-all",
+            "mt-8 px-8 py-3 rounded-full flex items-center gap-3 transition-all font-mono",
             isMetronomePlaying
-              ? "bg-purple-600 text-white"
-              : "bg-white/10 text-white/70 hover:bg-white/20"
+              ? "btn-shader-primary"
+              : "bg-[#0a0a0a] border border-[#222222] text-[#888888] hover:border-[#00ffff]/30"
           )}
           onClick={toggleMetronome}
         >
@@ -359,14 +322,14 @@ export function TempoSelectorScreen({ audioContext: propAudioContext, onTempoCon
 
         {/* Confirm button */}
         <button
-          className="mt-8 px-12 py-4 bg-green-600 hover:bg-green-500 rounded-full text-white font-semibold text-lg transition-colors"
+          className="mt-8 px-12 py-4 rounded-full btn-shader-primary font-mono uppercase tracking-wider text-sm"
           onClick={handleConfirm}
         >
           Confirm Tempo
         </button>
 
         {/* Tip */}
-        <div className="mt-8 text-white/30 text-xs text-center px-8">
+        <div className="mt-8 text-[#444444] text-xs font-mono text-center px-8">
           Drag left/right to adjust tempo, or use the buttons for fine control.
           <br />
           Tap "Listen" to hear the beat before confirming.

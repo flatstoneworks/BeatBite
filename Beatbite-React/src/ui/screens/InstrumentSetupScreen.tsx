@@ -18,6 +18,7 @@ import { bassDemoPlayer } from '../../core/BassDemoPlayer';
 import { guitarDemoPlayer } from '../../core/GuitarDemoPlayer';
 import { pianoDemoPlayer } from '../../core/PianoDemoPlayer';
 import { DrumIcon, BassIcon, GuitarIcon, PianoIcon, VoiceIcon, ChevronRightIcon } from '../components/Icons';
+import { FlowHeader } from '../components/FlowHeader';
 import { InstrumentOptionCard } from '../components/InstrumentOptionCard';
 import { clsx } from 'clsx';
 import type { BassStyle, GuitarStyle, PianoStyle, RealisticBassStyle, RealisticGuitarStyle, ElectricGuitarStyle, BassSynthType, GuitarSynthType } from '../../types';
@@ -377,27 +378,16 @@ export function InstrumentSetupScreen() {
     return null;
   }
 
-  const IconComponent = stepConfig.icon;
-
   return (
     <div className="h-full w-full bg-[#050505] flex flex-col relative">
       <div className="bg-shader-gradient" />
 
-      {/* Progress indicator */}
-      <SetupProgress currentStep={currentStep} />
+      <FlowHeader />
 
       {/* Main content */}
       <div className="flex-1 flex flex-col px-6 py-4 relative z-10 overflow-y-auto">
-        {/* Header with icon */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="w-14 h-14 rounded-full bg-[#0a0a0a] border border-[#00ffff]/30 flex items-center justify-center mb-3">
-            <IconComponent size={28} color="#00ffff" />
-          </div>
-          <h1 className="text-lg font-bold text-white font-mono uppercase tracking-wider text-center">
-            {stepConfig.title}
-          </h1>
-          <p className="text-xs text-[#666666] font-mono mt-1">{stepConfig.subtitle}</p>
-        </div>
+        {/* Subtitle */}
+        <p className="text-xs text-[#666666] font-mono mb-4 text-center">{stepConfig.subtitle}</p>
 
         {/* Beat indicator for instruments */}
         {currentStep !== 'setup-voice' && isPlaying && (
@@ -482,35 +472,6 @@ export function InstrumentSetupScreen() {
           <ChevronRightIcon size={18} />
         </button>
       </div>
-    </div>
-  );
-}
-
-/**
- * Progress indicator showing setup steps.
- */
-function SetupProgress({ currentStep }: { currentStep: SetupStep }) {
-  const steps: SetupStep[] = ['setup-drums', 'setup-bass', 'setup-guitar', 'setup-piano', 'setup-voice'];
-  const currentIndex = steps.indexOf(currentStep);
-
-  return (
-    <div className="flex justify-center gap-2 py-3 relative z-10">
-      {steps.map((step, index) => {
-        const isActive = step === currentStep;
-        const isCompleted = index < currentIndex;
-
-        return (
-          <div
-            key={step}
-            className={clsx(
-              'h-1.5 rounded-full transition-all',
-              isActive && 'w-8 bg-gradient-to-r from-[#00ffff] to-[#ff00ff]',
-              isCompleted && 'w-4 bg-[#00ffff]',
-              !isActive && !isCompleted && 'w-4 bg-[#333333]'
-            )}
-          />
-        );
-      })}
     </div>
   );
 }
