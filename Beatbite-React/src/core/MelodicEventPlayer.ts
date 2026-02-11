@@ -223,6 +223,11 @@ export class MelodicEventPlayer {
       // Trigger note sound
       this.triggerNote(event);
 
+      // Schedule pitch contour playback if available
+      if (event.pitchContour && event.pitchContour.length > 0) {
+        this.schedulePitchContour(event);
+      }
+
       // Notify callback
       this.callbacks.onEventPlayed?.(event);
 
@@ -260,6 +265,29 @@ export class MelodicEventPlayer {
       case 'piano':
         pianoSynthesizer.playNoteAtFrequency(event.frequency, velocity);
         break;
+    }
+  }
+
+  /**
+   * Schedule pitch contour updates during note playback.
+   * Reproduces pitch slides and vibrato recorded during sustain.
+   */
+  private schedulePitchContour(event: MelodicNoteEvent): void {
+    if (!event.pitchContour) return;
+
+    for (const point of event.pitchContour) {
+      const delay = Math.max(0, point.timeOffset);
+      setTimeout(() => {
+        if (!this.isPlaying || this.muted) return;
+        switch (this.instrumentType) {
+          case 'bass':
+            bassSynthesizer.updatePitch(point.frequency);
+            break;
+          case 'guitar':
+            guitarSynthesizer.updatePitch(point.frequency);
+            break;
+        }
+      }, delay);
     }
   }
 

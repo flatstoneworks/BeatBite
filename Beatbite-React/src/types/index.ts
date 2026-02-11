@@ -678,16 +678,26 @@ export interface GuitarEvent {
 // ==================== New Recording System Types ====================
 
 /**
+ * Pitch contour point — captures voice pitch at a moment during sustain.
+ * Used to reproduce pitch slides and vibrato during playback.
+ */
+export interface PitchContourPoint {
+  timeOffset: number;   // ms from note onset
+  frequency: number;    // Hz
+}
+
+/**
  * Melodic note event - represents a single note played.
  * Used for bass, guitar, and piano event-based recording.
  * This enables one-to-one mapping: one vocal sound = one instrument hit.
  */
 export interface MelodicNoteEvent {
-  frequency: number;      // Hz - detected pitch
+  frequency: number;      // Hz - detected pitch at onset
   noteName: string;       // e.g., "E2", "G3"
   timeInLoop: number;     // ms from loop start
   duration: number;       // ms - how long the note was held
   velocity: number;       // 0-1 based on voice volume at onset
+  pitchContour?: PitchContourPoint[];  // continuous pitch during sustain
 }
 
 /**

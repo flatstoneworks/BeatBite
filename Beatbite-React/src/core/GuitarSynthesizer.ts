@@ -578,6 +578,17 @@ export class GuitarSynthesizer {
     return this.currentFrequency;
   }
 
+  /**
+   * Update pitch of a currently playing note (continuous voice control).
+   * Transposes the voice frequency to guitar range and glides to it.
+   */
+  updatePitch(frequency: number): void {
+    if (!this.isPlaying || !this.audioContext) return;
+    const guitarFreq = this.voiceToGuitarFrequency(frequency);
+    this.targetFrequency = guitarFreq;
+    this.glideToFrequency(guitarFreq);
+  }
+
   // ==================== Single-Shot Mode (New Recording System) ====================
 
   /**

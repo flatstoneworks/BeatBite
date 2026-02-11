@@ -13,7 +13,7 @@
  * ONE vocal sound = ONE instrument hit (no continuous pitch following)
  */
 
-import type { MelodicNoteEvent, BassNoteEvent, GuitarNoteEvent, PianoNoteEvent, BassStyle, GuitarStyle, PianoStyle, VoiceOnsetResult } from '../types';
+import type { MelodicNoteEvent, PitchContourPoint, BassNoteEvent, GuitarNoteEvent, PianoNoteEvent, BassStyle, GuitarStyle, PianoStyle, VoiceOnsetResult } from '../types';
 import { voiceOnsetDetector } from './VoiceOnsetDetector';
 import { bassSynthesizer } from './BassSynthesizer';
 import { guitarSynthesizer } from './GuitarSynthesizer';
@@ -67,6 +67,8 @@ export class MelodicEventRecorder {
     timeInLoop: number;
     velocity: number;
     onsetTimestamp: number;
+    pitchContour: PitchContourPoint[];
+    lastContourSampleTime: number;
   } | null = null;
 
   /**
@@ -129,6 +131,7 @@ export class MelodicEventRecorder {
     voiceOnsetDetector.setCallbacks({
       onOnset: (result) => this.handleOnset(result),
       onOffset: (result) => this.handleOffset(result),
+      onSustainUpdate: (freq, noteName, rms) => this.handleSustainUpdate(freq, noteName, rms),
     });
 
     // Start the voice onset detector
@@ -190,6 +193,8 @@ export class MelodicEventRecorder {
       timeInLoop,
       velocity: result.velocity,
       onsetTimestamp: result.timestamp,
+      pitchContour: [],
+      lastContourSampleTime: result.timestamp,
     };
 
     // Trigger the instrument sound
@@ -215,6 +220,9 @@ export class MelodicEventRecorder {
         timeInLoop: this.pendingNote.timeInLoop,
         duration,
         velocity: this.pendingNote.velocity,
+        pitchContour: this.pendingNote.pitchContour.length > 0
+          ? this.pendingNote.pitchContour
+          : undefined,
       };
 
       this.events.push(event);
@@ -230,6 +238,42 @@ export class MelodicEventRecorder {
 
     this.pendingNote = null;
     this.callbacks.onNoteOff?.();
+  }
+
+  /**
+   * Handle continuous pitch update during sustain.
+   * Captures pitch contour and forwards pitch to synth in real-time.
+   */
+  private handleSustainUpdate(frequency: number, _noteName: string, _rms: number): void {
+    if (!this.isRecording || !this.pendingNote) return;
+
+    const now = performance.now();
+    const timeOffset = now - this.pendingNote.onsetTimestamp;
+
+    // Downsample: capture every 50ms (~20 Hz)
+    if (now - this.pendingNote.lastContourSampleTime >= 50) {
+      this.pendingNote.pitchContour.push({ timeOffset, frequency });
+      this.pendingNote.lastContourSampleTime = now;
+    }
+
+    // Update synth in real-time
+    this.updateCurrentInstrumentPitch(frequency);
+  }
+
+  /**
+   * Route pitch updates to the current instrument's synth.
+   */
+  private updateCurrentInstrumentPitch(frequency: number): void {
+    switch (this.instrumentType) {
+      case 'bass':
+        bassSynthesizer.updatePitch(frequency);
+        break;
+      case 'guitar':
+        guitarSynthesizer.updatePitch(frequency);
+        break;
+      case 'piano':
+        break; // Piano stays discrete
+    }
   }
 
   /**

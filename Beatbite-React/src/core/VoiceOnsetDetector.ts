@@ -17,6 +17,7 @@ import { pitchDetector } from './PitchDetector';
 export interface VoiceOnsetDetectorCallbacks {
   onOnset?: (result: VoiceOnsetResult) => void;
   onOffset?: (result: VoiceOnsetResult) => void;
+  onSustainUpdate?: (frequency: number, noteName: string, rms: number) => void;
 }
 
 export interface VoiceOnsetDetectorConfig {
@@ -166,6 +167,11 @@ export class VoiceOnsetDetector {
         return this.handleOnset(frequency, noteName, smoothedRms, now);
       }
     } else if (this.state === 'sustaining') {
+      // Fire continuous pitch update during sustain
+      if (frequency > 0 && this.callbacks.onSustainUpdate) {
+        this.callbacks.onSustainUpdate(frequency, noteName, smoothedRms);
+      }
+
       // Check for offset
       if (smoothedRms < this.config.offsetThreshold) {
         return this.handleOffset();

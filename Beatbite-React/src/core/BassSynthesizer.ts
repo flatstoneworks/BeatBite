@@ -510,6 +510,17 @@ export class BassSynthesizer {
     return this.currentFrequency;
   }
 
+  /**
+   * Update pitch of a currently playing note (continuous voice control).
+   * Transposes the voice frequency to bass range and glides to it.
+   */
+  updatePitch(frequency: number): void {
+    if (!this.isPlaying || !this.audioContext) return;
+    const bassFreq = this.voiceToBassFrequency(frequency);
+    this.targetFrequency = bassFreq;
+    this.glideToFrequency(bassFreq);
+  }
+
   // ==================== Single-Shot Mode (New Recording System) ====================
 
   /**
