@@ -8,9 +8,9 @@ React/TypeScript implementation of Beatbite, designed for easy conversion to Rea
 
 **Vision**: Instagram democratized photography with filters. Beatbite democratizes music creation using voice as the only input.
 
-## Current Status: Prototype v0.1
+## Current Status: Prototype v0.2
 
-Testing audio latency with voice passthrough (microphone → headphones).
+Multi-instrument voice-to-music creation with loop recording, library management, and band system. All audio via Web Audio API with Tone.js samplers for realistic instrument sounds.
 
 **Target Latency**: < 15ms (imperceptible) to max 100ms (acceptable)
 
@@ -53,72 +53,210 @@ npm run typecheck
 
 ```
 src/
-├── main.tsx                    # App entry point
-├── App.tsx                     # Main app component
-├── index.css                   # Tailwind CSS styles
+├── main.tsx                           # App entry point
+├── App.tsx                            # Router + screen composition
+├── index.css                          # Tailwind CSS styles
+├── vite-env.d.ts                      # Vite types + __LOG_LEVEL__ declaration
+├── types/
+│   └── index.ts                       # All TypeScript types (instruments, styles, configs)
+├── hooks/
+│   └── useGuidedFlow.ts               # Guided recording flow hook
 ├── core/
-│   ├── AudioEngine.ts          # Web Audio API wrapper
-│   └── store.ts                # Zustand state management
-├── features/
-│   ├── recording/              # Loop recording (future)
-│   ├── playback/               # Loop playback (future)
-│   └── mixer/                  # Track mixing (future)
+│   ├── AudioEngine.ts                 # Web Audio API wrapper (mic, passthrough, effects, detection)
+│   ├── store.ts                       # Legacy re-export (→ store/index.ts)
+│   ├── store/                         # Zustand state management (split slices)
+│   │   ├── index.ts                   # Main store + hooks
+│   │   ├── create.ts                  # Store creation with all slices
+│   │   ├── types.ts                   # Store type definitions
+│   │   ├── selectors.ts              # Memoized selectors
+│   │   ├── audioSlice.ts             # Audio state (passthrough, latency, effects)
+│   │   ├── bandSlice.ts              # Band management state
+│   │   ├── instrumentSlice.ts        # Instrument config state
+│   │   ├── librarySlice.ts           # Song library state
+│   │   ├── looperSlice.ts            # Loop recording state
+│   │   ├── navigationSlice.ts        # Navigation state
+│   │   └── playbackSlice.ts          # Playback state
+│   ├── utils/
+│   │   ├── audioUtils.ts              # Shared DSP utilities (ADSR, type guards)
+│   │   └── logger.ts                  # Level-gated logger (debug/info/warn/error)
+│   ├── synthesizers/                  # Instrument synthesis (abstract hierarchy)
+│   │   ├── AbstractSynthesizer.ts     # Base class (init, gain, audio context)
+│   │   ├── MonophonicSynthesizer.ts   # Single-voice (bass, guitar)
+│   │   ├── PianoSynthesizer.ts        # Polyphonic piano
+│   │   ├── BassSynthesizer.ts         # Bass synthesis (sub, pluck, wobble)
+│   │   ├── GuitarSynthesizer.ts       # Guitar synthesis (clean, distorted, acoustic)
+│   │   └── index.ts
+│   ├── demoPlayers/                   # Instrument demo playback (abstract hierarchy)
+│   │   ├── AbstractDemoPlayer.ts      # Base class (init, BPM, beat loop, volume, sampler)
+│   │   ├── BassDemoPlayer.ts          # Bass demo (electronic + sampled styles)
+│   │   ├── GuitarDemoPlayer.ts        # Guitar demo (electronic + sampled + electric)
+│   │   ├── PianoDemoPlayer.ts         # Piano demo (electronic + sampled styles)
+│   │   └── index.ts
+│   ├── BassDemoPlayer.ts             # Re-export proxy → demoPlayers/
+│   ├── GuitarDemoPlayer.ts           # Re-export proxy → demoPlayers/
+│   ├── PianoDemoPlayer.ts            # Re-export proxy → demoPlayers/
+│   ├── LayerManager.ts               # Multi-track layer management
+│   ├── LayerRecorder.ts              # Single layer recording
+│   ├── LoopRecorder.ts               # Loop-based recording
+│   ├── TransportController.ts        # Playback transport (tempo, loop boundaries)
+│   ├── MetronomeAudio.ts             # Click track
+│   ├── Quantizer.ts                  # Note quantization
+│   ├── LoopQuantizer.ts              # Loop-level quantization
+│   ├── DrumSynthesizer.ts            # Electronic drum synthesis
+│   ├── SampledDrumKit.ts             # Tone.js sampled drum kit
+│   ├── DrumKitPlayer.ts              # Drum playback controller
+│   ├── DrumEventPlayer.ts            # Drum event sequence player
+│   ├── DrumEventRecorder.ts          # Drum event recorder
+│   ├── MelodicEventPlayer.ts         # Melodic event sequence player
+│   ├── MelodicEventRecorder.ts       # Melodic event recorder
+│   ├── BaseSamplerInstrument.ts      # Base Tone.js sampler (shared by all samplers)
+│   ├── RealisticBassSampler.ts       # Tone.js bass sampler
+│   ├── RealisticGuitarSampler.ts     # Tone.js guitar sampler
+│   ├── RealisticPianoSampler.ts      # Tone.js piano sampler
+│   ├── ElectricGuitarSampler.ts      # Tone.js electric guitar sampler
+│   ├── BeatboxDetector.ts            # Voice → drum detection (FFT + energy)
+│   ├── BpmDetector.ts                # Tempo detection
+│   ├── PitchDetector.ts              # Voice pitch detection (autocorrelation)
+│   ├── VoiceOnsetDetector.ts         # Voice onset/offset detection
+│   ├── VoiceEffects.ts               # Reverb, delay, chorus, distortion
+│   ├── RecordingStorage.ts           # IndexedDB storage for recordings
+│   ├── LibraryStorage.ts             # IndexedDB storage for song library
+│   └── BandStorage.ts                # localStorage band persistence
 ├── ui/
 │   ├── screens/
-│   │   └── PassthroughScreen.tsx  # Latency test screen
+│   │   ├── BandSelectionScreen.tsx    # Band picker
+│   │   ├── BandCreateScreen.tsx       # Band creation with instrument demos
+│   │   ├── BandEditScreen.tsx         # Band editing
+│   │   ├── BandNameScreen.tsx         # Band naming
+│   │   ├── InstrumentSetupScreen.tsx  # Instrument config + style selection
+│   │   ├── TempoSelectorScreen.tsx    # Tempo selection
+│   │   ├── RecordScreen.tsx           # Main recording screen
+│   │   ├── RecordingScreen.tsx        # Active recording session
+│   │   ├── GuidedRecordingScreen.tsx  # Step-by-step guided recording
+│   │   ├── LooperScreen.tsx           # Loop-based recording
+│   │   ├── LibraryScreen.tsx          # Song library browser
+│   │   ├── PassthroughScreen.tsx      # Latency test screen
+│   │   └── SettingsScreen.tsx         # App settings
 │   └── components/
-│       ├── AudioVisualizer.tsx    # Level visualization
-│       ├── LatencyDisplay.tsx     # Latency indicator
-│       └── VolumeSlider.tsx       # Netflix-style slider
-├── hooks/                      # Custom React hooks
-├── types/
-│   └── index.ts               # TypeScript types
-└── utils/                     # Utility functions
+│       ├── index.ts                   # Component barrel exports
+│       ├── AudioVisualizer.tsx        # Level visualization
+│       ├── LatencyDisplay.tsx         # Latency indicator
+│       ├── VolumeSlider.tsx           # Netflix-style slider
+│       ├── FlowHeader.tsx             # Screen header with breadcrumbs
+│       ├── FooterNav.tsx              # Bottom navigation
+│       ├── ActiveBandHeader.tsx       # Current band display
+│       ├── MiniPlayer.tsx             # Compact song player
+│       ├── FullScreenPlayer.tsx       # Full screen playback
+│       ├── RecordingPanel.tsx         # Recording controls
+│       ├── EffectsPanel.tsx           # Effects controls
+│       ├── InstrumentOptionCard.tsx   # Instrument style card
+│       ├── DrumIndicator.tsx          # Drum beat indicator
+│       ├── BassIndicator.tsx          # Bass note indicator
+│       ├── GuitarIndicator.tsx        # Guitar note indicator
+│       ├── PianoIndicator.tsx         # Piano note indicator
+│       ├── PitchDisplay.tsx           # Pitch visualization
+│       └── Icons.tsx                  # SVG icon components
+└── vite.config.ts                     # Vite config (HTTPS, aliases, __LOG_LEVEL__)
 ```
 
 ## Core Components
 
 ### AudioEngine (`src/core/AudioEngine.ts`)
 
-Web Audio API wrapper for low-latency audio processing.
+Central Web Audio API wrapper — handles mic input, passthrough, effects chain, detection dispatch, and synthesis routing.
+
+### State Management (`src/core/store/`)
+
+Zustand store split into domain slices for maintainability:
+
+| Slice | Responsibilities |
+|-------|-----------------|
+| `audioSlice` | Passthrough, latency, effects, mic permissions |
+| `bandSlice` | Band CRUD, active band, instrument config |
+| `instrumentSlice` | Instrument types, styles, synth types |
+| `librarySlice` | Song library, save/load/delete |
+| `looperSlice` | Loop recording state, layers |
+| `navigationSlice` | Screen navigation, flow state |
+| `playbackSlice` | Transport, BPM, play/stop |
+
+### Logger (`src/core/utils/logger.ts`)
+
+Level-gated logging utility. Replaces all raw `console.*` calls.
 
 ```typescript
-import { audioEngine } from '@/core/AudioEngine';
+import { logger } from '@/core/utils/logger';
 
-// Set callbacks
-audioEngine.setCallbacks({
-  onLatencyMeasured: (ms) => console.log(`Latency: ${ms}ms`),
-  onLevelChanged: (level) => console.log(`Level: ${level}`),
-  onError: (error) => console.error(error),
-});
-
-// Initialize
-await audioEngine.initialize({ sampleRate: 48000, bufferSize: 256 });
-
-// Start passthrough
-await audioEngine.startPassthrough();
-
-// Stop passthrough
-audioEngine.stopPassthrough();
-
-// Cleanup
-audioEngine.dispose();
+logger.debug('per-frame data');   // Only in dev (stripped in prod)
+logger.info('lifecycle event');    // Only in dev (stripped in prod)
+logger.warn('non-critical issue'); // Always shown
+logger.error('failure', error);    // Always shown
 ```
 
-### State Management (`src/core/store.ts`)
+Levels controlled by Vite `define` — `__LOG_LEVEL__` is `"debug"` in dev, `"warn"` in production. **Never use raw `console.log/warn/error`** — always use `logger`.
 
-Zustand store for global state:
+### Synthesizer Hierarchy (`src/core/synthesizers/`)
 
-```typescript
-import { useAppStore } from '@/core/store';
-
-// In component
-const isActive = useAppStore((state) => state.isPassthroughActive);
-const setVolume = useAppStore((state) => state.setOutputVolume);
-
-// Or use selector hooks
-import { useIsPassthroughActive, useOutputVolume } from '@/core/store';
 ```
+AbstractSynthesizer          — init, gain, audio context management
+  ├── MonophonicSynthesizer  — single-voice (bass, guitar)
+  │   ├── BassSynthesizer    — sub, pluck, wobble synthesis
+  │   └── GuitarSynthesizer  — clean, distorted, acoustic synthesis
+  └── PianoSynthesizer       — polyphonic with harmonic table
+```
+
+### DemoPlayer Hierarchy (`src/core/demoPlayers/`)
+
+Instrument demo playback for setup/preview screens. Singletons exported from `index.ts`.
+
+```
+AbstractDemoPlayer           — init, BPM loop, volume, sampler loading
+  ├── BassDemoPlayer         — 2 synth types (electronic/sampled), 4 electronic styles
+  ├── GuitarDemoPlayer       — 3 synth types (+electric sampler), 4 electronic styles
+  └── PianoDemoPlayer        — 2 synth types, 5 electronic styles with harmonic table
+```
+
+**Backward-compatible proxies**: `src/core/BassDemoPlayer.ts`, `GuitarDemoPlayer.ts`, `PianoDemoPlayer.ts` re-export from `demoPlayers/`. Consumer files import from these proxies — no need to update imports.
+
+### Samplers (Tone.js)
+
+| Sampler | File | Purpose |
+|---------|------|---------|
+| `RealisticBassSampler` | `RealisticBassSampler.ts` | Sampled bass with multiple styles |
+| `RealisticGuitarSampler` | `RealisticGuitarSampler.ts` | Sampled acoustic guitar |
+| `ElectricGuitarSampler` | `ElectricGuitarSampler.ts` | Sampled electric guitar |
+| `RealisticPianoSampler` | `RealisticPianoSampler.ts` | Sampled piano with multiple styles |
+| `SampledDrumKit` | `SampledDrumKit.ts` | Sampled drum kit |
+| `BaseSamplerInstrument` | `BaseSamplerInstrument.ts` | Shared base for all Tone.js samplers |
+
+### Detection
+
+| Detector | Purpose |
+|----------|---------|
+| `BeatboxDetector` | Voice → drum mapping (FFT + energy analysis) |
+| `PitchDetector` | Voice frequency detection (autocorrelation) |
+| `VoiceOnsetDetector` | Voice onset/offset events |
+| `BpmDetector` | Tempo detection from audio |
+
+### Recording & Playback
+
+| Module | Purpose |
+|--------|---------|
+| `LayerManager` | Multi-track layer management (add, remove, play all) |
+| `LayerRecorder` | Single layer recording with loop-boundary sync |
+| `LoopRecorder` | Loop-based recording and playback |
+| `TransportController` | Tempo, loop boundaries, play/stop |
+| `MetronomeAudio` | Click track |
+| `Quantizer` / `LoopQuantizer` | Note and loop quantization |
+| `DrumEventRecorder/Player` | Drum event sequence record/playback |
+| `MelodicEventRecorder/Player` | Melodic event sequence record/playback |
+
+### Storage
+
+| Module | Backend | Purpose |
+|--------|---------|---------|
+| `RecordingStorage` | IndexedDB | Recording sessions, voice audio, mixes |
+| `LibraryStorage` | IndexedDB | Song library (save, load, delete, rename) |
+| `BandStorage` | localStorage | Band config persistence |
 
 ## React Native Migration
 
@@ -183,38 +321,71 @@ For React Native with low-latency audio, you'll need native modules:
 4. **Auto-Save**: Google Docs-style automatic saving
 5. **Dark UI**: Minimalist dark interface
 
-## Future Development
+## Development Progress
 
-### Phase 1: MVP (Current)
-- [x] Audio passthrough test (Web)
-- [ ] Pitch detection
-- [ ] Basic drum synthesis
-- [ ] Loop recording
+### Phase 1: Web Prototype (Complete)
+- [x] Audio passthrough with latency testing
+- [x] Pitch detection (autocorrelation)
+- [x] Beatbox detection (FFT + energy)
+- [x] Voice onset/offset detection
+- [x] BPM detection
+- [x] Drum synthesis (electronic + sampled kit)
+- [x] Bass synthesis (electronic + sampled, 4 styles)
+- [x] Guitar synthesis (electronic + sampled + electric, 4 styles)
+- [x] Piano synthesis (electronic + sampled, 5 styles)
+- [x] Voice effects (reverb, delay, chorus, distortion)
+- [x] Loop recording and playback
+- [x] Multi-layer recording with loop-boundary sync
+- [x] Quantization
+- [x] Band system (create, edit, instrument config)
+- [x] Song library with IndexedDB storage
+- [x] Guided recording flow
 
-### Phase 2: React Native
-- [ ] Port to React Native
-- [ ] Native audio modules
+### Phase 2: Structural Refactoring (Complete)
+- [x] LayerManager extraction
+- [x] Synthesizer abstract hierarchy
+- [x] Zustand store split into domain slices
+- [x] DemoPlayer deduplication (AbstractDemoPlayer)
+- [x] Logger utility with production stripping
+
+### Next: React Native Migration
+- [ ] Port to React Native (see Migration Guide below)
+- [ ] Native audio modules (Kotlin/Swift)
 - [ ] iOS/Android builds
-
-### Phase 3: Instruments
-- [ ] Bass synthesizer
-- [ ] Keyboard/piano
-- [ ] Additional drums
-- [ ] Voice effects (reverb)
-
-### Phase 4: Sharing
-- [ ] MP3 export
-- [ ] TikTok/Instagram integration
-- [ ] MIDI export
 
 ## Key Dependencies
 
-- **React 18** - UI framework
-- **Zustand** - State management (RN compatible)
-- **Tailwind CSS** - Styling (nativewind for RN)
-- **Vite** - Build tool (Metro for RN)
-- **TypeScript** - Type safety
-- **Web Audio API** - Browser audio (native modules for RN)
+- **React 18** + **React Router DOM** — UI framework + routing
+- **Zustand** — State management (RN compatible)
+- **Tone.js** — Sampled instrument playback (piano, bass, guitar, drums)
+- **Tailwind CSS** — Styling (nativewind for RN)
+- **Vite** — Build tool with `define` for compile-time constants
+- **TypeScript** — Type safety
+- **Web Audio API** — Browser audio (native modules for RN)
+- **Playwright** — E2E testing (dev dependency)
+- **clsx** — Conditional className utility
+
+## Conventions
+
+### Logging
+- **Never** use raw `console.log/warn/error` — use `logger.debug/info/warn/error` from `@/core/utils/logger`
+- **Hot paths** (per-frame, per-note, per-beat): `logger.debug` — stripped in production
+- **Lifecycle events** (init, start, stop, loaded): `logger.info` — stripped in production
+- **Warnings** (non-critical): `logger.warn` — always shown
+- **Errors** (failures, catch blocks): `logger.error` — always shown
+
+### Class Hierarchies
+- Synthesizers extend `AbstractSynthesizer` (in `synthesizers/`)
+- DemoPlayers extend `AbstractDemoPlayer` (in `demoPlayers/`)
+- Both use template method pattern with abstract hooks
+
+### Backward Compatibility
+- Old file locations (`src/core/BassDemoPlayer.ts`, etc.) are 1-line re-export proxies
+- Consumer files import from these proxies — **do not delete proxy files**
+- `src/core/store.ts` is a re-export proxy for `src/core/store/index.ts`
+
+### Commit Convention
+`[type][Domain] Description` — e.g., `[refactor][Core] Add logger utility`
 
 ## Performance Notes
 
