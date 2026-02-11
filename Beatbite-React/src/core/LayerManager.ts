@@ -17,9 +17,49 @@
  * - Mix all layers for export
  */
 
-import type { Layer, LayerType, LayerInfo, DrumHitEvent, BassNoteEvent, GuitarNoteEvent, PianoNoteEvent } from '../types';
+import type { Layer, LayerType, LayerKind, LayerInfo, DrumHitEvent, BassNoteEvent, GuitarNoteEvent, PianoNoteEvent } from '../types';
 import { drumEventPlayer } from './DrumEventPlayer';
 import { bassEventPlayer, guitarEventPlayer, pianoEventPlayer } from './MelodicEventPlayer';
+
+// Event layer configuration for generic handling
+type EventLayerKind = Exclude<LayerKind, 'audio'>;
+
+const EVENT_LAYER_CONFIGS: Record<EventLayerKind, {
+  type: LayerType;
+  displayName: string;
+  eventProperty: 'events' | 'bassEvents' | 'guitarEvents' | 'pianoEvents';
+  getPlayer: () => { initialize(ctx: AudioContext): void; setVolume(v: number): void; setMuted(m: boolean): void; start(t: number): void };
+  loadEvents: (events: unknown[], ms: number) => void;
+}> = {
+  drum_events: {
+    type: 'drums',
+    displayName: 'Drums',
+    eventProperty: 'events',
+    getPlayer: () => drumEventPlayer,
+    loadEvents: (events, ms) => drumEventPlayer.loadEvents(events as DrumHitEvent[], ms),
+  },
+  bass_events: {
+    type: 'bass',
+    displayName: 'Bass',
+    eventProperty: 'bassEvents',
+    getPlayer: () => bassEventPlayer,
+    loadEvents: (events, ms) => bassEventPlayer.loadBassEvents(events as BassNoteEvent[], ms),
+  },
+  guitar_events: {
+    type: 'guitar',
+    displayName: 'Guitar',
+    eventProperty: 'guitarEvents',
+    getPlayer: () => guitarEventPlayer,
+    loadEvents: (events, ms) => guitarEventPlayer.loadGuitarEvents(events as GuitarNoteEvent[], ms),
+  },
+  piano_events: {
+    type: 'piano',
+    displayName: 'Piano',
+    eventProperty: 'pianoEvents',
+    getPlayer: () => pianoEventPlayer,
+    loadEvents: (events, ms) => pianoEventPlayer.loadPianoEvents(events as PianoNoteEvent[], ms),
+  },
+};
 
 export interface LayerManagerCallbacks {
   onLayersChanged?: (layers: LayerInfo[]) => void;
@@ -105,169 +145,60 @@ export class LayerManager {
   }
 
   /**
-   * Add a new drum event layer.
+   * Generic: Add any event-based layer (drum, bass, guitar, piano).
    */
+  private addEventLayer(kind: EventLayerKind, events: unknown[], loopLengthMs: number, name?: string): Layer {
+    if (!this.audioContext || !this.masterGain) {
+      throw new Error('LayerManager not initialized');
+    }
+
+    const config = EVENT_LAYER_CONFIGS[kind];
+    const id = crypto.randomUUID();
+    const layerName = name || `${config.displayName} ${this.getLayerCountByType(config.type) + 1}`;
+
+    // Gain node kept for consistency (event layers play through their synthesizer)
+    const gainNode = this.audioContext.createGain();
+    gainNode.gain.value = 1.0;
+
+    if (this.loopLengthMs === 0) {
+      this.loopLengthMs = loopLengthMs;
+    }
+
+    const layer = {
+      id,
+      type: config.type,
+      kind,
+      name: layerName,
+      [config.eventProperty]: [...(events as unknown[])],
+      volume: 1.0,
+      muted: false,
+      duration: loopLengthMs,
+      gainNode,
+      isPlaying: false,
+    } as Layer;
+
+    this.layers.set(id, layer);
+    this.notifyLayersChanged();
+
+    console.log(`[LayerManager] Added ${config.displayName.toLowerCase()} event layer: ${layerName} (${(events as unknown[]).length} events)`);
+
+    return layer;
+  }
+
   addDrumEventLayer(events: DrumHitEvent[], loopLengthMs: number, name?: string): Layer {
-    if (!this.audioContext || !this.masterGain) {
-      throw new Error('LayerManager not initialized');
-    }
-
-    const id = crypto.randomUUID();
-    const layerName = name || `Drums ${this.getLayerCountByType('drums') + 1}`;
-
-    // Create gain node for this layer (controls DrumEventPlayer volume)
-    const gainNode = this.audioContext.createGain();
-    gainNode.gain.value = 1.0;
-    // Note: drum events play through DrumSynthesizer, not this gain node
-    // gainNode is kept for consistency and potential future use
-
-    // Set loop length from first layer
-    if (this.loopLengthMs === 0) {
-      this.loopLengthMs = loopLengthMs;
-    }
-
-    const layer: Layer = {
-      id,
-      type: 'drums',
-      kind: 'drum_events',
-      name: layerName,
-      events: [...events],
-      volume: 1.0,
-      muted: false,
-      duration: loopLengthMs,
-      gainNode,
-      isPlaying: false,
-    };
-
-    this.layers.set(id, layer);
-    this.notifyLayersChanged();
-
-    console.log(`[LayerManager] Added drum event layer: ${layerName} (${events.length} events)`);
-
-    return layer;
+    return this.addEventLayer('drum_events', events, loopLengthMs, name);
   }
 
-  /**
-   * Add a new bass event layer.
-   */
   addBassEventLayer(events: BassNoteEvent[], loopLengthMs: number, name?: string): Layer {
-    if (!this.audioContext || !this.masterGain) {
-      throw new Error('LayerManager not initialized');
-    }
-
-    const id = crypto.randomUUID();
-    const layerName = name || `Bass ${this.getLayerCountByType('bass') + 1}`;
-
-    // Create gain node for this layer
-    const gainNode = this.audioContext.createGain();
-    gainNode.gain.value = 1.0;
-
-    // Set loop length from first layer
-    if (this.loopLengthMs === 0) {
-      this.loopLengthMs = loopLengthMs;
-    }
-
-    const layer: Layer = {
-      id,
-      type: 'bass',
-      kind: 'bass_events',
-      name: layerName,
-      bassEvents: [...events],
-      volume: 1.0,
-      muted: false,
-      duration: loopLengthMs,
-      gainNode,
-      isPlaying: false,
-    };
-
-    this.layers.set(id, layer);
-    this.notifyLayersChanged();
-
-    console.log(`[LayerManager] Added bass event layer: ${layerName} (${events.length} events)`);
-
-    return layer;
+    return this.addEventLayer('bass_events', events, loopLengthMs, name);
   }
 
-  /**
-   * Add a new guitar event layer.
-   */
   addGuitarEventLayer(events: GuitarNoteEvent[], loopLengthMs: number, name?: string): Layer {
-    if (!this.audioContext || !this.masterGain) {
-      throw new Error('LayerManager not initialized');
-    }
-
-    const id = crypto.randomUUID();
-    const layerName = name || `Guitar ${this.getLayerCountByType('guitar') + 1}`;
-
-    // Create gain node for this layer
-    const gainNode = this.audioContext.createGain();
-    gainNode.gain.value = 1.0;
-
-    // Set loop length from first layer
-    if (this.loopLengthMs === 0) {
-      this.loopLengthMs = loopLengthMs;
-    }
-
-    const layer: Layer = {
-      id,
-      type: 'guitar',
-      kind: 'guitar_events',
-      name: layerName,
-      guitarEvents: [...events],
-      volume: 1.0,
-      muted: false,
-      duration: loopLengthMs,
-      gainNode,
-      isPlaying: false,
-    };
-
-    this.layers.set(id, layer);
-    this.notifyLayersChanged();
-
-    console.log(`[LayerManager] Added guitar event layer: ${layerName} (${events.length} events)`);
-
-    return layer;
+    return this.addEventLayer('guitar_events', events, loopLengthMs, name);
   }
 
-  /**
-   * Add a new piano event layer.
-   */
   addPianoEventLayer(events: PianoNoteEvent[], loopLengthMs: number, name?: string): Layer {
-    if (!this.audioContext || !this.masterGain) {
-      throw new Error('LayerManager not initialized');
-    }
-
-    const id = crypto.randomUUID();
-    const layerName = name || `Piano ${this.getLayerCountByType('piano') + 1}`;
-
-    // Create gain node for this layer
-    const gainNode = this.audioContext.createGain();
-    gainNode.gain.value = 1.0;
-
-    // Set loop length from first layer
-    if (this.loopLengthMs === 0) {
-      this.loopLengthMs = loopLengthMs;
-    }
-
-    const layer: Layer = {
-      id,
-      type: 'piano',
-      kind: 'piano_events',
-      name: layerName,
-      pianoEvents: [...events],
-      volume: 1.0,
-      muted: false,
-      duration: loopLengthMs,
-      gainNode,
-      isPlaying: false,
-    };
-
-    this.layers.set(id, layer);
-    this.notifyLayersChanged();
-
-    console.log(`[LayerManager] Added piano event layer: ${layerName} (${events.length} events)`);
-
-    return layer;
+    return this.addEventLayer('piano_events', events, loopLengthMs, name);
   }
 
   /**
@@ -337,15 +268,8 @@ export class LayerManager {
 
     layer.volume = Math.max(0, Math.min(1, volume));
 
-    if (layer.kind === 'drum_events') {
-      // Update DrumEventPlayer volume
-      drumEventPlayer.setVolume(layer.muted ? 0 : layer.volume);
-    } else if (layer.kind === 'bass_events') {
-      bassEventPlayer.setVolume(layer.muted ? 0 : layer.volume);
-    } else if (layer.kind === 'guitar_events') {
-      guitarEventPlayer.setVolume(layer.muted ? 0 : layer.volume);
-    } else if (layer.kind === 'piano_events') {
-      pianoEventPlayer.setVolume(layer.muted ? 0 : layer.volume);
+    if (layer.kind && layer.kind !== 'audio') {
+      EVENT_LAYER_CONFIGS[layer.kind].getPlayer().setVolume(layer.muted ? 0 : layer.volume);
     } else if (layer.gainNode && !layer.muted) {
       layer.gainNode.gain.setTargetAtTime(
         layer.volume,
@@ -366,15 +290,8 @@ export class LayerManager {
 
     layer.muted = muted;
 
-    if (layer.kind === 'drum_events') {
-      // Update DrumEventPlayer mute
-      drumEventPlayer.setMuted(muted);
-    } else if (layer.kind === 'bass_events') {
-      bassEventPlayer.setMuted(muted);
-    } else if (layer.kind === 'guitar_events') {
-      guitarEventPlayer.setMuted(muted);
-    } else if (layer.kind === 'piano_events') {
-      pianoEventPlayer.setMuted(muted);
+    if (layer.kind && layer.kind !== 'audio') {
+      EVENT_LAYER_CONFIGS[layer.kind].getPlayer().setMuted(muted);
     } else if (layer.gainNode) {
       const targetVolume = muted ? 0 : layer.volume;
       layer.gainNode.gain.setTargetAtTime(
@@ -396,16 +313,9 @@ export class LayerManager {
     this.isPlaying = true;
     this.playbackStartTime = this.audioContext.currentTime + 0.05; // Small buffer for sync
 
-    // Start event-based layers first (they need the playback start time)
     for (const layer of this.layers.values()) {
-      if (layer.kind === 'drum_events') {
-        this.startDrumEventLayerPlayback(layer);
-      } else if (layer.kind === 'bass_events') {
-        this.startBassEventLayerPlayback(layer);
-      } else if (layer.kind === 'guitar_events') {
-        this.startGuitarEventLayerPlayback(layer);
-      } else if (layer.kind === 'piano_events') {
-        this.startPianoEventLayerPlayback(layer);
+      if (layer.kind && layer.kind !== 'audio') {
+        this.startEventLayerPlayback(layer);
       } else {
         this.startLayerPlayback(layer);
       }
@@ -436,68 +346,20 @@ export class LayerManager {
   }
 
   /**
-   * Start playback of a drum event layer.
+   * Generic: Start playback of any event-based layer.
    */
-  private startDrumEventLayerPlayback(layer: Layer): void {
-    if (!this.audioContext || !layer.events || layer.kind !== 'drum_events') return;
+  private startEventLayerPlayback(layer: Layer): void {
+    if (!this.audioContext || !layer.kind || layer.kind === 'audio') return;
 
-    // Initialize drum event player if needed
-    if (!drumEventPlayer.getIsPlaying()) {
-      drumEventPlayer.initialize(this.audioContext);
-    }
+    const config = EVENT_LAYER_CONFIGS[layer.kind];
+    const events = layer[config.eventProperty];
+    if (!events) return;
 
-    // Load events and start
-    drumEventPlayer.loadEvents(layer.events, this.loopLengthMs);
-    drumEventPlayer.setVolume(layer.muted ? 0 : layer.volume);
-    drumEventPlayer.start(this.playbackStartTime);
-    layer.isPlaying = true;
-  }
-
-  /**
-   * Start playback of a bass event layer.
-   */
-  private startBassEventLayerPlayback(layer: Layer): void {
-    if (!this.audioContext || !layer.bassEvents || layer.kind !== 'bass_events') return;
-
-    // Initialize bass event player if needed
-    bassEventPlayer.initialize(this.audioContext);
-
-    // Load events and start
-    bassEventPlayer.loadBassEvents(layer.bassEvents, this.loopLengthMs);
-    bassEventPlayer.setVolume(layer.muted ? 0 : layer.volume);
-    bassEventPlayer.start(this.playbackStartTime);
-    layer.isPlaying = true;
-  }
-
-  /**
-   * Start playback of a guitar event layer.
-   */
-  private startGuitarEventLayerPlayback(layer: Layer): void {
-    if (!this.audioContext || !layer.guitarEvents || layer.kind !== 'guitar_events') return;
-
-    // Initialize guitar event player if needed
-    guitarEventPlayer.initialize(this.audioContext);
-
-    // Load events and start
-    guitarEventPlayer.loadGuitarEvents(layer.guitarEvents, this.loopLengthMs);
-    guitarEventPlayer.setVolume(layer.muted ? 0 : layer.volume);
-    guitarEventPlayer.start(this.playbackStartTime);
-    layer.isPlaying = true;
-  }
-
-  /**
-   * Start playback of a piano event layer.
-   */
-  private startPianoEventLayerPlayback(layer: Layer): void {
-    if (!this.audioContext || !layer.pianoEvents || layer.kind !== 'piano_events') return;
-
-    // Initialize piano event player if needed
-    pianoEventPlayer.initialize(this.audioContext);
-
-    // Load events and start
-    pianoEventPlayer.loadPianoEvents(layer.pianoEvents, this.loopLengthMs);
-    pianoEventPlayer.setVolume(layer.muted ? 0 : layer.volume);
-    pianoEventPlayer.start(this.playbackStartTime);
+    const player = config.getPlayer();
+    player.initialize(this.audioContext);
+    config.loadEvents(events, this.loopLengthMs);
+    player.setVolume(layer.muted ? 0 : layer.volume);
+    player.start(this.playbackStartTime);
     layer.isPlaying = true;
   }
 

@@ -11,9 +11,7 @@
  */
 
 import type { MelodicNoteEvent, BassNoteEvent, GuitarNoteEvent, PianoNoteEvent } from '../types';
-import { bassSynthesizer } from './BassSynthesizer';
-import { guitarSynthesizer } from './GuitarSynthesizer';
-import { pianoSynthesizer } from './PianoSynthesizer';
+import { bassSynthesizer, guitarSynthesizer, pianoSynthesizer } from './synthesizers';
 import type { MelodicInstrumentType } from './MelodicEventRecorder';
 
 export interface MelodicEventPlayerCallbacks {

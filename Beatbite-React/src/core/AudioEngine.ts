@@ -15,11 +15,9 @@
 
 import { PitchDetector, type PitchResult } from './PitchDetector';
 import { drumSynthesizer, type DrumType, type DrumKitType } from './DrumSynthesizer';
-import { bassSynthesizer, type BassStyle } from './BassSynthesizer';
-import { guitarSynthesizer, type GuitarStyle } from './GuitarSynthesizer';
+import { bassSynthesizer, type BassStyle, guitarSynthesizer, type GuitarStyle, pianoSynthesizer, type PianoStyle } from './synthesizers';
 import { electricGuitarSampler } from './ElectricGuitarSampler';
 import type { GuitarSynthType, ElectricGuitarStyle } from '../types';
-import { pianoSynthesizer, type PianoStyle } from './PianoSynthesizer';
 import { voiceEffects, type EffectType, type VoiceEffectsState } from './VoiceEffects';
 import { loopRecorder, type Recording, type RecorderState } from './LoopRecorder';
 import { transportController } from './TransportController';

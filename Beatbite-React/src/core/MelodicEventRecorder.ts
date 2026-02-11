@@ -15,9 +15,7 @@
 
 import type { MelodicNoteEvent, PitchContourPoint, BassNoteEvent, GuitarNoteEvent, PianoNoteEvent, BassStyle, GuitarStyle, PianoStyle, VoiceOnsetResult } from '../types';
 import { voiceOnsetDetector } from './VoiceOnsetDetector';
-import { bassSynthesizer } from './BassSynthesizer';
-import { guitarSynthesizer } from './GuitarSynthesizer';
-import { pianoSynthesizer } from './PianoSynthesizer';
+import { bassSynthesizer, guitarSynthesizer, pianoSynthesizer } from './synthesizers';
 
 export type MelodicInstrumentType = 'bass' | 'guitar' | 'piano';
 
