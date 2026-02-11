@@ -11,6 +11,7 @@ import { PianoIndicator } from '../components/PianoIndicator';
 import { EffectsPanel } from '../components/EffectsPanel';
 import { ActiveBandHeader } from '../components/ActiveBandHeader';
 import { clsx } from 'clsx';
+import { logger } from '../../core/utils/logger';
 import type { InstrumentMode } from '../../types';
 import type { EffectType, VoiceEffectsState } from '../../core/VoiceEffects';
 import { libraryStorage, LibraryStorage } from '../../core/LibraryStorage';
@@ -168,7 +169,7 @@ export function GuidedRecordingScreen() {
 
     const mode = stepConfig.instrumentMode;
     audioEngine.setInstrumentMode(mode);
-    console.log(`[GuidedRecording] Set instrument mode to: ${mode}`);
+    logger.debug(`[GuidedRecording] Set instrument mode to: ${mode}`);
 
     // Handle effects
     if (currentStep === 'voice') {
@@ -348,9 +349,9 @@ export function GuidedRecordingScreen() {
         layerCount: layerInfos.length,
       });
 
-      console.log('[GuidedRecording] Song saved to library:', songId);
+      logger.info('[GuidedRecording] Song saved to library:', songId);
     } catch (err) {
-      console.error('[GuidedRecording] Failed to save song:', err);
+      logger.error('[GuidedRecording] Failed to save song:', err);
     }
 
     // Navigate to library after saving

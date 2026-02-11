@@ -14,6 +14,7 @@
 import * as Tone from 'tone';
 import { BaseSamplerInstrument, type BaseStyleConfig, type InstrumentRange } from './BaseSamplerInstrument';
 import type { ElectricGuitarStyle } from '../types';
+import { logger } from './utils/logger';
 
 // Extended style config with distortion settings
 interface ElectricStyleConfig extends BaseStyleConfig {
@@ -148,7 +149,7 @@ export class ElectricGuitarSampler extends BaseSamplerInstrument<ElectricGuitarS
    */
   protected override applyStyle(): void {
     const config = STYLE_CONFIGS[this.style];
-    console.log(`[${this.logPrefix}] Applying style: ${this.style}, distortion: ${config.distortion}`);
+    logger.debug(`[${this.logPrefix}] Applying style: ${this.style}, distortion: ${config.distortion}`);
 
     // Apply base style settings
     super.applyStyle();

@@ -24,6 +24,7 @@ import type {
   PianoStyle,
 } from '../types';
 import type { DrumKitType } from './DrumKitPlayer';
+import { logger } from './utils/logger';
 
 const DB_NAME = 'beatbite-recordings';
 const DB_VERSION = 1;
@@ -52,13 +53,13 @@ export class RecordingStorage {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
       request.onerror = () => {
-        console.error('[RecordingStorage] Failed to open database:', request.error);
+        logger.error('[RecordingStorage] Failed to open database:', request.error);
         reject(request.error);
       };
 
       request.onsuccess = () => {
         this.db = request.result;
-        console.log('[RecordingStorage] Database opened successfully');
+        logger.info('[RecordingStorage] Database opened successfully');
         resolve();
       };
 
@@ -79,7 +80,7 @@ export class RecordingStorage {
           audioStore.createIndex('sessionId', 'sessionId', { unique: false });
         }
 
-        console.log('[RecordingStorage] Database schema created/upgraded');
+        logger.info('[RecordingStorage] Database schema created/upgraded');
       };
     });
 
@@ -146,12 +147,12 @@ export class RecordingStorage {
       const request = store.put(session);
 
       request.onsuccess = () => {
-        console.log(`[RecordingStorage] Session saved: ${session.id}`);
+        logger.debug(`[RecordingStorage] Session saved: ${session.id}`);
         resolve();
       };
 
       request.onerror = () => {
-        console.error('[RecordingStorage] Failed to save session:', request.error);
+        logger.error('[RecordingStorage] Failed to save session:', request.error);
         reject(request.error);
       };
     });
@@ -174,7 +175,7 @@ export class RecordingStorage {
       };
 
       request.onerror = () => {
-        console.error('[RecordingStorage] Failed to get session:', request.error);
+        logger.error('[RecordingStorage] Failed to get session:', request.error);
         reject(request.error);
       };
     });
@@ -221,7 +222,7 @@ export class RecordingStorage {
       };
 
       request.onerror = () => {
-        console.error('[RecordingStorage] Failed to get sessions:', request.error);
+        logger.error('[RecordingStorage] Failed to get sessions:', request.error);
         reject(request.error);
       };
     });
@@ -305,12 +306,12 @@ export class RecordingStorage {
       };
 
       transaction.oncomplete = () => {
-        console.log(`[RecordingStorage] Voice recording saved for session: ${sessionId}`);
+        logger.debug(`[RecordingStorage] Voice recording saved for session: ${sessionId}`);
         resolve();
       };
 
       transaction.onerror = () => {
-        console.error('[RecordingStorage] Failed to save voice recording:', transaction.error);
+        logger.error('[RecordingStorage] Failed to save voice recording:', transaction.error);
         reject(transaction.error);
       };
     });
@@ -334,7 +335,7 @@ export class RecordingStorage {
       };
 
       request.onerror = () => {
-        console.error('[RecordingStorage] Failed to get voice recording:', request.error);
+        logger.error('[RecordingStorage] Failed to get voice recording:', request.error);
         reject(request.error);
       };
     });
@@ -361,12 +362,12 @@ export class RecordingStorage {
       const request = store.put(audioData);
 
       request.onsuccess = () => {
-        console.log(`[RecordingStorage] Mix saved for session: ${sessionId}`);
+        logger.debug(`[RecordingStorage] Mix saved for session: ${sessionId}`);
         resolve();
       };
 
       request.onerror = () => {
-        console.error('[RecordingStorage] Failed to save mix:', request.error);
+        logger.error('[RecordingStorage] Failed to save mix:', request.error);
         reject(request.error);
       };
     });
@@ -390,7 +391,7 @@ export class RecordingStorage {
       };
 
       request.onerror = () => {
-        console.error('[RecordingStorage] Failed to get mix:', request.error);
+        logger.error('[RecordingStorage] Failed to get mix:', request.error);
         reject(request.error);
       };
     });
@@ -416,12 +417,12 @@ export class RecordingStorage {
       audioStore.delete([sessionId, 'mix']);
 
       transaction.oncomplete = () => {
-        console.log(`[RecordingStorage] Session deleted: ${sessionId}`);
+        logger.debug(`[RecordingStorage] Session deleted: ${sessionId}`);
         resolve();
       };
 
       transaction.onerror = () => {
-        console.error('[RecordingStorage] Failed to delete session:', transaction.error);
+        logger.error('[RecordingStorage] Failed to delete session:', transaction.error);
         reject(transaction.error);
       };
     });
@@ -460,7 +461,7 @@ export class RecordingStorage {
       this.db.close();
       this.db = null;
       this.initPromise = null;
-      console.log('[RecordingStorage] Database closed');
+      logger.info('[RecordingStorage] Database closed');
     }
   }
 }

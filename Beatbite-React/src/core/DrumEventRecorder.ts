@@ -15,6 +15,7 @@
 
 import type { DrumHitEvent, BeatboxDrumType, BeatboxDetectionResult } from '../types';
 import { beatboxDetector } from './BeatboxDetector';
+import { logger } from './utils/logger';
 
 export interface DrumEventRecorderCallbacks {
   onEventRecorded?: (event: DrumHitEvent) => void;
@@ -90,7 +91,7 @@ export class DrumEventRecorder {
     this.startAnalysisLoop();
 
     this.callbacks.onRecordingStarted?.();
-    console.log(`[DrumEventRecorder] Started recording${loopLengthMs > 0 ? ` (${loopLengthMs}ms loop)` : ''}`);
+    logger.info(`[DrumEventRecorder] Started recording${loopLengthMs > 0 ? ` (${loopLengthMs}ms loop)` : ''}`);
   }
 
   /**
@@ -108,7 +109,7 @@ export class DrumEventRecorder {
     }
 
     this.callbacks.onRecordingStopped?.(this.events);
-    console.log(`[DrumEventRecorder] Stopped recording, ${this.events.length} events`);
+    logger.info(`[DrumEventRecorder] Stopped recording, ${this.events.length} events`);
 
     return this.events;
   }
@@ -137,7 +138,7 @@ export class DrumEventRecorder {
     this.events.push(event);
     this.callbacks.onEventRecorded?.(event);
 
-    console.log(`[DrumEventRecorder] Event: ${result.drumType} @ ${timeInLoop.toFixed(0)}ms vel=${result.velocity.toFixed(2)}`);
+    logger.debug(`[DrumEventRecorder] Event: ${result.drumType} @ ${timeInLoop.toFixed(0)}ms vel=${result.velocity.toFixed(2)}`);
   }
 
   /**
@@ -305,7 +306,7 @@ export class DrumEventRecorder {
         if (data.loopLengthMs) this.loopLengthMs = data.loopLengthMs;
       }
     } catch (e) {
-      console.error('[DrumEventRecorder] Failed to import JSON:', e);
+      logger.error('[DrumEventRecorder] Failed to import JSON:', e);
     }
   }
 

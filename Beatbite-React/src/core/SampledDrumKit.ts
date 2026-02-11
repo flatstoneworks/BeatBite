@@ -13,6 +13,7 @@
  */
 
 import * as Tone from 'tone';
+import { logger } from './utils/logger';
 
 export type SampledDrumKitType = 'acoustic' | 'cr78' | '4opfm' | 'techno' | 'linn';
 
@@ -86,7 +87,7 @@ export class SampledDrumKit {
   async initialize(): Promise<void> {
     // Start Tone.js audio context (required after user gesture)
     await Tone.start();
-    console.log('[SampledDrumKit] Tone.js started, context state:', Tone.context.state);
+    logger.info('[SampledDrumKit] Tone.js started, context state:', Tone.context.state);
 
     // Create master volume
     this.volume = new Tone.Volume(-6).toDestination();
@@ -97,16 +98,16 @@ export class SampledDrumKit {
    */
   async loadKit(kit: SampledDrumKitType): Promise<void> {
     if (this.loadedKits.has(kit)) {
-      console.log(`[SampledDrumKit] Kit already loaded: ${kit}`);
+      logger.debug(`[SampledDrumKit] Kit already loaded: ${kit}`);
       return;
     }
     if (this.loadingKits.has(kit)) {
-      console.log(`[SampledDrumKit] Kit already loading: ${kit}`);
+      logger.debug(`[SampledDrumKit] Kit already loading: ${kit}`);
       return;
     }
 
     this.loadingKits.add(kit);
-    console.log(`[SampledDrumKit] Starting to load kit: ${kit}`);
+    logger.info(`[SampledDrumKit] Starting to load kit: ${kit}`);
 
     return new Promise((resolve, reject) => {
       const basePath = KIT_PATHS[kit];
@@ -116,7 +117,7 @@ export class SampledDrumKit {
         urls[sound] = basePath + file;
       }
 
-      console.log(`[SampledDrumKit] Loading URLs for ${kit}:`, urls);
+      logger.debug(`[SampledDrumKit] Loading URLs for ${kit}:`, urls);
 
       const players = new Tone.Players({
         urls,
@@ -127,12 +128,12 @@ export class SampledDrumKit {
           this.players.set(kit, players);
           this.loadedKits.add(kit);
           this.loadingKits.delete(kit);
-          console.log(`[SampledDrumKit] Successfully loaded kit: ${kit}`);
+          logger.info(`[SampledDrumKit] Successfully loaded kit: ${kit}`);
           this.onLoaded?.();
           resolve();
         },
         onerror: (error) => {
-          console.error(`[SampledDrumKit] Failed to load kit ${kit}:`, error);
+          logger.error(`[SampledDrumKit] Failed to load kit ${kit}:`, error);
           this.loadingKits.delete(kit);
           reject(error);
         },
@@ -184,23 +185,23 @@ export class SampledDrumKit {
   playDrum(sound: DrumSoundType, velocity: number = 0.8): void {
     const players = this.players.get(this.currentKit);
     if (!players) {
-      console.warn(`[SampledDrumKit] Kit not loaded: ${this.currentKit}`);
+      logger.warn(`[SampledDrumKit] Kit not loaded: ${this.currentKit}`);
       return;
     }
 
     try {
       const player = players.player(sound);
-      console.log(`[SampledDrumKit] Playing ${sound} from ${this.currentKit}, loaded: ${player.loaded}`);
+      logger.debug(`[SampledDrumKit] Playing ${sound} from ${this.currentKit}, loaded: ${player.loaded}`);
       if (player.loaded) {
         // Stop if already playing to allow retriggering
         player.stop();
         player.volume.value = 20 * Math.log10(velocity);
         player.start();
       } else {
-        console.warn(`[SampledDrumKit] Player for ${sound} not loaded yet`);
+        logger.warn(`[SampledDrumKit] Player for ${sound} not loaded yet`);
       }
     } catch (error) {
-      console.error(`[SampledDrumKit] Error playing ${sound}:`, error);
+      logger.error(`[SampledDrumKit] Error playing ${sound}:`, error);
     }
   }
 

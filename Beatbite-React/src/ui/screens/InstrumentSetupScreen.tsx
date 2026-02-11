@@ -21,6 +21,7 @@ import { DrumIcon, BassIcon, GuitarIcon, PianoIcon, VoiceIcon, ChevronRightIcon 
 import { FlowHeader } from '../components/FlowHeader';
 import { InstrumentOptionCard } from '../components/InstrumentOptionCard';
 import { clsx } from 'clsx';
+import { logger } from '../../core/utils/logger';
 import type { BassStyle, GuitarStyle, PianoStyle, RealisticBassStyle, RealisticGuitarStyle, ElectricGuitarStyle, BassSynthType, GuitarSynthType } from '../../types';
 import { PIANO_STYLE_CONFIG, ALL_BASS_OPTIONS, ALL_GUITAR_OPTIONS } from '../../types';
 import type { EffectType } from '../../core/VoiceEffects';
@@ -343,7 +344,7 @@ export function InstrumentSetupScreen() {
       // Save the new band and return to band selection
       if (isCreatingNewBand) {
         saveNewBand();
-        console.log('[InstrumentSetupScreen] New band saved, returning to band selection');
+        logger.debug('[InstrumentSetupScreen] New band saved, returning to band selection');
         goToStep('band-select');
         return;
       }

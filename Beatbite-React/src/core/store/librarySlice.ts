@@ -2,6 +2,7 @@ import type { StateCreator } from 'zustand';
 import type { AppStore, LibrarySlice } from './types';
 import { initialLibrary } from './types';
 import { libraryStorage } from '../LibraryStorage';
+import { logger } from '../utils/logger';
 
 export const createLibrarySlice: StateCreator<AppStore, [], [], LibrarySlice> = (set) => ({
   library: initialLibrary,
@@ -12,7 +13,7 @@ export const createLibrarySlice: StateCreator<AppStore, [], [], LibrarySlice> = 
       const songs = await libraryStorage.getSongsList();
       set((state) => ({ library: { ...state.library, songs, isLoading: false } }));
     } catch (error) {
-      console.error('[Store] Failed to initialize library:', error);
+      logger.error('[Store] Failed to initialize library:', error);
       set((state) => ({ library: { ...state.library, isLoading: false } }));
     }
   },

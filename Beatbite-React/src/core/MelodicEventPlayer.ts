@@ -13,6 +13,7 @@
 import type { MelodicNoteEvent, BassNoteEvent, GuitarNoteEvent, PianoNoteEvent } from '../types';
 import { bassSynthesizer, guitarSynthesizer, pianoSynthesizer } from './synthesizers';
 import type { MelodicInstrumentType } from './MelodicEventRecorder';
+import { logger } from './utils/logger';
 
 export interface MelodicEventPlayerCallbacks {
   onEventPlayed?: (event: MelodicNoteEvent) => void;
@@ -48,7 +49,7 @@ export class MelodicEventPlayer {
    */
   initialize(audioContext: AudioContext): void {
     this.audioContext = audioContext;
-    console.log('[MelodicEventPlayer] Initialized');
+    logger.info('[MelodicEventPlayer] Initialized');
   }
 
   /**
@@ -73,7 +74,7 @@ export class MelodicEventPlayer {
     this.events = [...events].sort((a, b) => a.timeInLoop - b.timeInLoop);
     this.loopLengthMs = loopLengthMs;
     this.scheduledEvents.clear();
-    console.log(`[MelodicEventPlayer] Loaded ${events.length} ${this.instrumentType} events, loop=${loopLengthMs}ms`);
+    logger.info(`[MelodicEventPlayer] Loaded ${events.length} ${this.instrumentType} events, loop=${loopLengthMs}ms`);
   }
 
   /**
@@ -130,7 +131,7 @@ export class MelodicEventPlayer {
     this.scheduler();
 
     this.callbacks.onPlaybackStarted?.();
-    console.log(`[MelodicEventPlayer] Started ${this.instrumentType} playback`);
+    logger.info(`[MelodicEventPlayer] Started ${this.instrumentType} playback`);
   }
 
   /**
@@ -154,7 +155,7 @@ export class MelodicEventPlayer {
     this.releaseCurrentNote();
 
     this.callbacks.onPlaybackStopped?.();
-    console.log(`[MelodicEventPlayer] Stopped ${this.instrumentType} playback`);
+    logger.info(`[MelodicEventPlayer] Stopped ${this.instrumentType} playback`);
   }
 
   /**

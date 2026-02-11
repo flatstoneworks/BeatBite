@@ -9,6 +9,7 @@
  */
 
 import { createDistortionCurve } from './utils/audioUtils';
+import { logger } from './utils/logger';
 
 export type EffectType = 'reverb' | 'delay' | 'chorus' | 'distortion';
 
@@ -85,7 +86,7 @@ export class VoiceEffects {
     // Update mix levels
     this.updateMix();
 
-    console.log('[VoiceEffects] Initialized');
+    logger.info('[VoiceEffects] Initialized');
 
     return { input: this.inputNode, output: this.outputNode };
   }

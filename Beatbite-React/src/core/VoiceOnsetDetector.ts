@@ -13,6 +13,7 @@
 
 import type { VoiceOnsetResult } from '../types';
 import { pitchDetector } from './PitchDetector';
+import { logger } from './utils/logger';
 
 export interface VoiceOnsetDetectorCallbacks {
   onOnset?: (result: VoiceOnsetResult) => void;
@@ -79,7 +80,7 @@ export class VoiceOnsetDetector {
     this.analyserBuffer = new Float32Array(buffer);
     this.rmsHistory = [];
 
-    console.log('[VoiceOnsetDetector] Initialized');
+    logger.info('[VoiceOnsetDetector] Initialized');
   }
 
   /**
@@ -105,7 +106,7 @@ export class VoiceOnsetDetector {
     this.state = 'silent';
     this.rmsHistory = [];
     this.startAnalysisLoop();
-    console.log('[VoiceOnsetDetector] Started');
+    logger.info('[VoiceOnsetDetector] Started');
   }
 
   /**
@@ -122,7 +123,7 @@ export class VoiceOnsetDetector {
     }
 
     this.state = 'silent';
-    console.log('[VoiceOnsetDetector] Stopped');
+    logger.info('[VoiceOnsetDetector] Stopped');
   }
 
   /**
@@ -206,7 +207,7 @@ export class VoiceOnsetDetector {
     };
 
     this.callbacks.onOnset?.(result);
-    console.log(
+    logger.debug(
       `[VoiceOnsetDetector] ONSET: ${noteName} (${frequency.toFixed(1)}Hz) vel=${this.onsetVelocity.toFixed(2)}`
     );
 
@@ -244,7 +245,7 @@ export class VoiceOnsetDetector {
 
     this.state = 'silent';
     this.callbacks.onOffset?.(result);
-    console.log(
+    logger.debug(
       `[VoiceOnsetDetector] OFFSET: ${this.onsetNoteName} duration=${duration.toFixed(0)}ms`
     );
 

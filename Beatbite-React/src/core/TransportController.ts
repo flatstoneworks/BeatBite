@@ -9,6 +9,7 @@
  */
 
 import type { TransportState } from '../types';
+import { logger } from './utils/logger';
 
 export interface TransportCallbacks {
   onPositionUpdate?: (state: TransportState) => void;
@@ -43,7 +44,7 @@ export class TransportController {
    */
   initialize(audioContext: AudioContext): void {
     this.audioContext = audioContext;
-    console.log('[Transport] Initialized');
+    logger.info('[Transport] Initialized');
   }
 
   /**
@@ -93,7 +94,7 @@ export class TransportController {
     this.bars = Math.round(totalBeats / this.beatsPerBar);
     if (this.bars < 1) this.bars = 1;
 
-    console.log(`[Transport] Loop set: ${this.bpm} BPM, ${this.bars} bars, ${durationMs.toFixed(0)}ms`);
+    logger.info(`[Transport] Loop set: ${this.bpm} BPM, ${this.bars} bars, ${durationMs.toFixed(0)}ms`);
   }
 
   /**
@@ -151,7 +152,7 @@ export class TransportController {
       );
     }
 
-    console.log(`[Transport] Manual tempo: ${this.bpm} BPM, ${this.bars} bars, ${this.loopLengthMs.toFixed(0)}ms`);
+    logger.info(`[Transport] Manual tempo: ${this.bpm} BPM, ${this.bars} bars, ${this.loopLengthMs.toFixed(0)}ms`);
   }
 
   /**
@@ -165,7 +166,7 @@ export class TransportController {
     this.lastBeat = -1;
 
     this.startPositionTracking();
-    console.log('[Transport] Started');
+    logger.info('[Transport] Started');
   }
 
   /**
@@ -180,7 +181,7 @@ export class TransportController {
     this.lastBeat = -1;
 
     this.notifyPositionUpdate();
-    console.log('[Transport] Stopped');
+    logger.info('[Transport] Stopped');
   }
 
   /**

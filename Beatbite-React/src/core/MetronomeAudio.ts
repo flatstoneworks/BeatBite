@@ -8,6 +8,8 @@
  * - Volume control
  */
 
+import { logger } from './utils/logger';
+
 export interface MetronomeCallbacks {
   onBeat?: (beat: number, isDownbeat: boolean) => void;
 }
@@ -40,7 +42,7 @@ export class MetronomeAudio {
     this.masterGain.gain.value = 0.5;
     this.masterGain.connect(audioContext.destination);
 
-    console.log('[MetronomeAudio] Initialized');
+    logger.info('[MetronomeAudio] Initialized');
   }
 
   /**
@@ -98,7 +100,7 @@ export class MetronomeAudio {
     // Start the scheduler
     this.scheduler();
 
-    console.log(`[MetronomeAudio] Started at ${this.bpm} BPM`);
+    logger.info(`[MetronomeAudio] Started at ${this.bpm} BPM`);
   }
 
   /**
@@ -113,7 +115,7 @@ export class MetronomeAudio {
     }
 
     this.currentBeat = 0;
-    console.log('[MetronomeAudio] Stopped');
+    logger.info('[MetronomeAudio] Stopped');
   }
 
   /**

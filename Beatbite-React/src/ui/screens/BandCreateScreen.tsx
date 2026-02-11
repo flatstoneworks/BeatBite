@@ -16,6 +16,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppStore } from '../../core/store';
 import { clsx } from 'clsx';
+import { logger } from '../../core/utils/logger';
 import { DrumIcon, BassIcon, GuitarIcon, PianoIcon, VoiceIcon } from '../components/Icons';
 import { InstrumentOptionCard } from '../components/InstrumentOptionCard';
 import { audioEngine } from '../../core/AudioEngine';
@@ -135,7 +136,7 @@ export function BandCreateScreen() {
     stopAllPreviews();
     if (currentStepIndex === STEPS.length - 1) {
       // Final step - create band and go to library
-      console.log('[BandCreate] Creating band with name:', bandName.trim() || 'My Band');
+      logger.debug('[BandCreate] Creating band with name:', bandName.trim() || 'My Band');
       try {
         const newBand = createBandFromInput({
           name: bandName.trim() || 'My Band',
@@ -159,10 +160,10 @@ export function BandCreateScreen() {
           // Voice
           voiceEffects: voiceEffects as Record<'reverb' | 'delay' | 'chorus' | 'distortion', boolean>,
         });
-        console.log('[BandCreate] Band created successfully:', newBand?.id);
+        logger.info('[BandCreate] Band created successfully:', newBand?.id);
         navigate('/library/bands');
       } catch (error) {
-        console.error('[BandCreate] Error creating band:', error);
+        logger.error('[BandCreate] Error creating band:', error);
         // Still navigate even if there's an error
         navigate('/library/bands');
       }

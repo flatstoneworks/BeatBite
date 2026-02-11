@@ -16,6 +16,7 @@
  */
 
 import type { BeatboxDrumType, BeatboxDetectionResult } from '../types';
+import { logger } from './utils/logger';
 
 // Frequency band definitions (Hz)
 const BANDS = {
@@ -72,7 +73,7 @@ export class BeatboxDetector {
     // Allocate frequency data buffer
     this.frequencyData = new Float32Array(this.analyser.frequencyBinCount);
 
-    console.log('[BeatboxDetector] Initialized');
+    logger.info('[BeatboxDetector] Initialized');
     return this.analyser;
   }
 
@@ -89,7 +90,7 @@ export class BeatboxDetector {
    */
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;
-    console.log(`[BeatboxDetector] ${enabled ? 'Enabled' : 'Disabled'}`);
+    logger.debug(`[BeatboxDetector] ${enabled ? 'Enabled' : 'Disabled'}`);
   }
 
   /**

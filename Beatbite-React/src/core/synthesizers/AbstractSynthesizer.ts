@@ -5,6 +5,8 @@
  * octave shift, note change callbacks, and voice-to-instrument frequency mapping.
  */
 
+import { logger } from '../utils/logger';
+
 export abstract class AbstractSynthesizer<StyleType extends string> {
   protected audioContext: AudioContext | null = null;
   protected masterGain: GainNode | null = null;
@@ -24,7 +26,7 @@ export abstract class AbstractSynthesizer<StyleType extends string> {
     this.masterGain = audioContext.createGain();
     this.masterGain.gain.value = this.volume;
     this.masterGain.connect(audioContext.destination);
-    console.log(`[${this.logTag}] Initialized`);
+    logger.info(`[${this.logTag}] Initialized`);
   }
 
   setOnNoteChanged(callback: (frequency: number, noteName: string) => void): void {

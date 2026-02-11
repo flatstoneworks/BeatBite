@@ -13,6 +13,7 @@
 
 import * as Tone from 'tone';
 import { frequencyToNoteName } from './utils/audioUtils';
+import { logger } from './utils/logger';
 
 export type SampledBassStyle = 'finger' | 'pick' | 'slap' | 'muted';
 
@@ -193,12 +194,12 @@ export class RealisticBassSampler {
           onload: () => {
             this.isLoaded = true;
             this.isLoading = false;
-            console.log('[RealisticBass] Samples loaded');
+            logger.info('[RealisticBass] Samples loaded');
             this.onLoaded?.();
             resolve();
           },
           onerror: (error) => {
-            console.error('[RealisticBass] Failed to load samples:', error);
+            logger.error('[RealisticBass] Failed to load samples:', error);
             this.isLoading = false;
             reject(error);
           },
@@ -210,7 +211,7 @@ export class RealisticBassSampler {
         this.applyStyle();
 
       } catch (error) {
-        console.error('[RealisticBass] Initialization error:', error);
+        logger.error('[RealisticBass] Initialization error:', error);
         this.isLoading = false;
         reject(error);
       }
@@ -344,7 +345,7 @@ export class RealisticBassSampler {
     const noteName = frequencyToNoteName(bassFreq);
     this.onNoteChanged?.(bassFreq, noteName);
 
-    console.log(
+    logger.debug(
       `[RealisticBass] triggerNoteFromVoice: ${noteName} (${bassFreq.toFixed(1)}Hz) vel=${velocity.toFixed(2)}`
     );
 

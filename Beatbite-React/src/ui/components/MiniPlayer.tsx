@@ -17,6 +17,7 @@ import { bassSynthesizer, guitarSynthesizer, pianoSynthesizer } from '../../core
 import { drumEventPlayer } from '../../core/DrumEventPlayer';
 import { bassEventPlayer, guitarEventPlayer, pianoEventPlayer } from '../../core/MelodicEventPlayer';
 import { clsx } from 'clsx';
+import { logger } from '../../core/utils/logger';
 
 export function MiniPlayer() {
   const playback = usePlayback();
@@ -98,28 +99,28 @@ export function MiniPlayer() {
         drumEventPlayer.loadEvents(layer.drumEvents, loopLengthMs);
         drumEventPlayer.setVolume(layer.muted ? 0 : layer.volume);
         drumEventPlayer.start(startTime);
-        console.log(`[MiniPlayer] Started drum events: ${layer.drumEvents.length} events`);
+        logger.debug(`[MiniPlayer] Started drum events: ${layer.drumEvents.length} events`);
       }
 
       if (layer.kind === 'bass_events' && layer.bassEvents && layer.bassEvents.length > 0) {
         bassEventPlayer.loadBassEvents(layer.bassEvents, loopLengthMs);
         bassEventPlayer.setVolume(layer.muted ? 0 : layer.volume);
         bassEventPlayer.start(startTime);
-        console.log(`[MiniPlayer] Started bass events: ${layer.bassEvents.length} events`);
+        logger.debug(`[MiniPlayer] Started bass events: ${layer.bassEvents.length} events`);
       }
 
       if (layer.kind === 'guitar_events' && layer.guitarEvents && layer.guitarEvents.length > 0) {
         guitarEventPlayer.loadGuitarEvents(layer.guitarEvents, loopLengthMs);
         guitarEventPlayer.setVolume(layer.muted ? 0 : layer.volume);
         guitarEventPlayer.start(startTime);
-        console.log(`[MiniPlayer] Started guitar events: ${layer.guitarEvents.length} events`);
+        logger.debug(`[MiniPlayer] Started guitar events: ${layer.guitarEvents.length} events`);
       }
 
       if (layer.kind === 'piano_events' && layer.pianoEvents && layer.pianoEvents.length > 0) {
         pianoEventPlayer.loadPianoEvents(layer.pianoEvents, loopLengthMs);
         pianoEventPlayer.setVolume(layer.muted ? 0 : layer.volume);
         pianoEventPlayer.start(startTime);
-        console.log(`[MiniPlayer] Started piano events: ${layer.pianoEvents.length} events`);
+        logger.debug(`[MiniPlayer] Started piano events: ${layer.pianoEvents.length} events`);
       }
     }
   }, []);
@@ -133,7 +134,7 @@ export function MiniPlayer() {
         // Get full song data
         const song = await libraryStorage.getSong(playback.currentSongId!);
         if (!song || song.layers.length === 0) {
-          console.warn('[MiniPlayer] No song data found');
+          logger.warn('[MiniPlayer] No song data found');
           return;
         }
 
@@ -201,7 +202,7 @@ export function MiniPlayer() {
             }
           };
 
-          console.log('[MiniPlayer] Started audio layer playback');
+          logger.debug('[MiniPlayer] Started audio layer playback');
         }
 
         // Play event-based layers
@@ -213,7 +214,7 @@ export function MiniPlayer() {
         // Start position updates
         animationFrameRef.current = requestAnimationFrame(updatePosition);
 
-        console.log('[MiniPlayer] Song playback started:', {
+        logger.debug('[MiniPlayer] Song playback started:', {
           hasAudio: !!audioLayerWithData,
           hasEvents: hasEventLayers,
           duration: song.duration,
@@ -221,7 +222,7 @@ export function MiniPlayer() {
         });
 
       } catch (error) {
-        console.error('[MiniPlayer] Error loading song:', error);
+        logger.error('[MiniPlayer] Error loading song:', error);
       }
     };
 

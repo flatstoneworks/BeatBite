@@ -14,6 +14,7 @@
 import type { BassStyle, BassSynthType, RealisticBassStyle, GuitarStyle, GuitarSynthType, RealisticGuitarStyle, ElectricGuitarStyle, PianoStyle, PianoSynthType, RealisticPianoStyle, SampledDrumKitType } from '../types';
 import type { DrumKitType, DrumSynthType } from './DrumKitPlayer';
 import type { EffectType } from './VoiceEffects';
+import { logger } from './utils/logger';
 
 /**
  * Voice effects configuration for a band.
@@ -102,7 +103,7 @@ class BandStorage {
       // Sort by most recently updated
       return bands.sort((a, b) => b.updatedAt - a.updatedAt);
     } catch (error) {
-      console.error('[BandStorage] Failed to load bands:', error);
+      logger.error('[BandStorage] Failed to load bands:', error);
       return [];
     }
   }
@@ -150,7 +151,7 @@ class BandStorage {
     bands.push(band);
     this.saveBands(bands);
 
-    console.log('[BandStorage] Created band:', band.name);
+    logger.debug('[BandStorage] Created band:', band.name);
     return band;
   }
 
@@ -162,7 +163,7 @@ class BandStorage {
     const index = bands.findIndex(b => b.id === id);
 
     if (index === -1) {
-      console.error('[BandStorage] Band not found:', id);
+      logger.error('[BandStorage] Band not found:', id);
       return null;
     }
 
@@ -173,7 +174,7 @@ class BandStorage {
     };
 
     this.saveBands(bands);
-    console.log('[BandStorage] Updated band:', bands[index].name);
+    logger.debug('[BandStorage] Updated band:', bands[index].name);
     return bands[index];
   }
 
@@ -195,7 +196,7 @@ class BandStorage {
       this.setActiveBandId(null);
     }
 
-    console.log('[BandStorage] Deleted band:', id);
+    logger.debug('[BandStorage] Deleted band:', id);
     return true;
   }
 
@@ -221,7 +222,7 @@ class BandStorage {
         localStorage.removeItem(ACTIVE_BAND_KEY);
       }
     } catch (error) {
-      console.error('[BandStorage] Failed to set active band:', error);
+      logger.error('[BandStorage] Failed to set active band:', error);
     }
   }
 
@@ -248,7 +249,7 @@ class BandStorage {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(bands));
     } catch (error) {
-      console.error('[BandStorage] Failed to save bands:', error);
+      logger.error('[BandStorage] Failed to save bands:', error);
     }
   }
 

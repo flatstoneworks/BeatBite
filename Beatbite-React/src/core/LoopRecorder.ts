@@ -8,6 +8,8 @@
  * - Exports to WAV format
  */
 
+import { logger } from './utils/logger';
+
 export interface Recording {
   id: string;
   name: string;
@@ -56,7 +58,7 @@ export class LoopRecorder {
     // Create a destination node that captures audio as a media stream
     this.mediaStreamDest = audioContext.createMediaStreamDestination();
 
-    console.log('[LoopRecorder] Initialized');
+    logger.info('[LoopRecorder] Initialized');
 
     return this.mediaStreamDest;
   }
@@ -109,11 +111,11 @@ export class LoopRecorder {
       this.startDurationTracking();
 
       this.notifyStateChange();
-      console.log('[LoopRecorder] Recording started');
+      logger.info('[LoopRecorder] Recording started');
 
       return true;
     } catch (error) {
-      console.error('[LoopRecorder] Failed to start recording:', error);
+      logger.error('[LoopRecorder] Failed to start recording:', error);
       return false;
     }
   }
@@ -129,7 +131,7 @@ export class LoopRecorder {
     this.stopDurationTracking();
 
     this.notifyStateChange();
-    console.log('[LoopRecorder] Recording stopped');
+    logger.info('[LoopRecorder] Recording stopped');
   }
 
   /**
@@ -185,9 +187,9 @@ export class LoopRecorder {
       this.onRecordingComplete?.(recording);
       this.notifyStateChange();
 
-      console.log('[LoopRecorder] Recording processed:', recording.name, `${recording.duration.toFixed(1)}s`);
+      logger.debug('[LoopRecorder] Recording processed:', recording.name, `${recording.duration.toFixed(1)}s`);
     } catch (error) {
-      console.error('[LoopRecorder] Failed to process recording:', error);
+      logger.error('[LoopRecorder] Failed to process recording:', error);
     }
   }
 
@@ -220,7 +222,7 @@ export class LoopRecorder {
     recording.isPlaying = true;
 
     this.notifyStateChange();
-    console.log('[LoopRecorder] Playing:', recording.name);
+    logger.debug('[LoopRecorder] Playing:', recording.name);
   }
 
   /**

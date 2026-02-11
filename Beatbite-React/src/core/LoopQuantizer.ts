@@ -17,6 +17,7 @@
  */
 
 import type { QuantizedLoopResult } from '../types';
+import { logger } from './utils/logger';
 
 export class LoopQuantizer {
   /**
@@ -42,7 +43,7 @@ export class LoopQuantizer {
     const quantizedBars = num4BarBlocks * 4;
     const quantizedDurationMs = quantizedBars * msPerBar;
 
-    console.log(
+    logger.debug(
       `[LoopQuantizer] ${durationMs.toFixed(0)}ms → ${quantizedDurationMs.toFixed(0)}ms (${quantizedBars} bars @ ${bpm} BPM)`
     );
 

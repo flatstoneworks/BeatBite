@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppStore, useBands } from '../../core/store';
 import { clsx } from 'clsx';
+import { logger } from '../../core/utils/logger';
 
 /**
  * Generate a gradient color based on band name for placeholder avatar.
@@ -133,7 +134,7 @@ export function BandEditScreen() {
       });
       navigate('/library/bands');
     } catch (error) {
-      console.error('[BandEditScreen] Failed to save:', error);
+      logger.error('[BandEditScreen] Failed to save:', error);
     } finally {
       setIsSaving(false);
     }

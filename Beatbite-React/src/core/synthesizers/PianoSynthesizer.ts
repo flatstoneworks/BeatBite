@@ -13,6 +13,7 @@
  */
 
 import { frequencyToNoteName, createNoiseBuffer } from '../utils/audioUtils';
+import { logger } from '../utils/logger';
 import { AbstractSynthesizer } from './AbstractSynthesizer';
 
 export type PianoStyle = 'grand' | 'upright' | 'electric' | 'rhodes' | 'synth';
@@ -134,7 +135,7 @@ export class PianoSynthesizer extends AbstractSynthesizer<PianoStyle> {
     const noteName = frequencyToNoteName(pianoFreq);
     this.onNoteChanged?.(pianoFreq, noteName);
 
-    console.log(
+    logger.debug(
       `[PianoSynth] triggerNoteFromVoice: ${noteName} (${pianoFreq.toFixed(1)}Hz) vel=${velocity.toFixed(2)}`
     );
 

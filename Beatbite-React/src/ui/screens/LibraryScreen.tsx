@@ -21,6 +21,7 @@ import { guitarDemoPlayer } from '../../core/GuitarDemoPlayer';
 import { pianoDemoPlayer } from '../../core/PianoDemoPlayer';
 import { BASS_STYLE_CONFIG, REALISTIC_BASS_STYLE_CONFIG, GUITAR_STYLE_CONFIG, REALISTIC_GUITAR_STYLE_CONFIG, ELECTRIC_GUITAR_STYLE_CONFIG, PIANO_STYLE_CONFIG, REALISTIC_PIANO_STYLE_CONFIG, SAMPLED_DRUM_KIT_CONFIG, ALL_BASS_OPTIONS, ALL_GUITAR_OPTIONS, ALL_PIANO_OPTIONS, ALL_DRUM_OPTIONS, type BassStyle, type GuitarStyle, type PianoStyle, type RealisticPianoStyle, type PianoSynthType, type BassSynthType, type RealisticBassStyle, type GuitarSynthType, type RealisticGuitarStyle, type ElectricGuitarStyle, type SampledDrumKitType } from '../../types';
 import { clsx } from 'clsx';
+import { logger } from '../../core/utils/logger';
 import type { Band } from '../../core/BandStorage';
 
 type LibraryTab = 'songs' | 'instruments' | 'bands';
@@ -54,7 +55,7 @@ export function LibraryScreen() {
         setSelectedSongId(null);
       }
     } catch (error) {
-      console.error('[LibraryScreen] Failed to delete song:', error);
+      logger.error('[LibraryScreen] Failed to delete song:', error);
     } finally {
       setDeletingId(null);
     }
@@ -893,7 +894,7 @@ function InstrumentsTabContent() {
     // Request mic permission and start passthrough
     const granted = await audioEngine.requestPermission();
     if (!granted) {
-      console.error('[LibraryScreen] Microphone permission denied');
+      logger.error('[LibraryScreen] Microphone permission denied');
       return;
     }
 

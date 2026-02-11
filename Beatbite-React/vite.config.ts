@@ -3,8 +3,11 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
+  define: {
+    __LOG_LEVEL__: JSON.stringify(mode === 'production' ? 'warn' : 'debug'),
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -22,4 +25,4 @@ export default defineConfig({
   preview: {
     port: 9020,
   },
-});
+}));

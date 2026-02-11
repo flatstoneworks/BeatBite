@@ -18,6 +18,7 @@ import { FlowHeader } from '../components/FlowHeader';
 import { audioEngine } from '../../core/AudioEngine';
 import { metronomeAudio } from '../../core/MetronomeAudio';
 import { clsx } from 'clsx';
+import { logger } from '../../core/utils/logger';
 
 type RecordingPhase = 'ready' | 'countdown' | 'recording' | 'stopped';
 
@@ -229,7 +230,7 @@ export function RecordingScreen() {
     if (instrument === 'drums') {
       // For drums: stop beatbox recording and get events
       const result = audioEngine.stopVariableDrumRecording();
-      console.log(`[RecordingScreen] Drum recording stopped: ${result.events.length} events, ${result.bars} bars`);
+      logger.info(`[RecordingScreen] Drum recording stopped: ${result.events.length} events, ${result.bars} bars`);
 
       // Store the recorded events in app state
       setRecordedDrumEvents(result.events);
@@ -237,12 +238,12 @@ export function RecordingScreen() {
       // For melodic instruments: stop pitch detection recording
       audioEngine.stopMelodicEventRecording();
       audioEngine.stopLooperPlayback();
-      console.log(`[RecordingScreen] ${instrument} melodic recording stopped`);
+      logger.info(`[RecordingScreen] ${instrument} melodic recording stopped`);
     } else if (instrument === 'voice') {
       // For voice: stop audio recording
       audioEngine.stopLayerRecording();
       audioEngine.stopLooperPlayback();
-      console.log('[RecordingScreen] Voice recording stopped');
+      logger.info('[RecordingScreen] Voice recording stopped');
     }
 
     // Advance to next instrument immediately

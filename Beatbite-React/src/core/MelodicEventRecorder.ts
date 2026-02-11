@@ -16,6 +16,7 @@
 import type { MelodicNoteEvent, PitchContourPoint, BassNoteEvent, GuitarNoteEvent, PianoNoteEvent, BassStyle, GuitarStyle, PianoStyle, VoiceOnsetResult } from '../types';
 import { voiceOnsetDetector } from './VoiceOnsetDetector';
 import { bassSynthesizer, guitarSynthesizer, pianoSynthesizer } from './synthesizers';
+import { logger } from './utils/logger';
 
 export type MelodicInstrumentType = 'bass' | 'guitar' | 'piano';
 
@@ -115,7 +116,7 @@ export class MelodicEventRecorder {
   startRecording(loopLengthMs: number): void {
     if (this.isRecording) return;
     if (loopLengthMs <= 0) {
-      console.error('[MelodicEventRecorder] Loop length must be > 0');
+      logger.error('[MelodicEventRecorder] Loop length must be > 0');
       return;
     }
 
@@ -136,7 +137,7 @@ export class MelodicEventRecorder {
     voiceOnsetDetector.start();
 
     this.callbacks.onRecordingStarted?.();
-    console.log(`[MelodicEventRecorder] Started recording ${this.instrumentType} (${loopLengthMs}ms loop)`);
+    logger.info(`[MelodicEventRecorder] Started recording ${this.instrumentType} (${loopLengthMs}ms loop)`);
   }
 
   /**
@@ -165,7 +166,7 @@ export class MelodicEventRecorder {
     }
 
     this.callbacks.onRecordingStopped?.(this.events);
-    console.log(`[MelodicEventRecorder] Stopped recording, ${this.events.length} events`);
+    logger.info(`[MelodicEventRecorder] Stopped recording, ${this.events.length} events`);
 
     return this.events;
   }
@@ -199,7 +200,7 @@ export class MelodicEventRecorder {
     this.triggerCurrentInstrument(result.frequency, result.velocity);
 
     this.callbacks.onNoteOn?.(result.frequency, result.noteName);
-    console.log(`[MelodicEventRecorder] Note ON: ${result.noteName} @ ${timeInLoop.toFixed(0)}ms`);
+    logger.debug(`[MelodicEventRecorder] Note ON: ${result.noteName} @ ${timeInLoop.toFixed(0)}ms`);
   }
 
   /**
@@ -226,7 +227,7 @@ export class MelodicEventRecorder {
       this.events.push(event);
       this.callbacks.onEventRecorded?.(event);
 
-      console.log(
+      logger.debug(
         `[MelodicEventRecorder] Note OFF: ${event.noteName} duration=${duration.toFixed(0)}ms`
       );
     }

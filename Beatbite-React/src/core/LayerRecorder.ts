@@ -10,6 +10,7 @@
 
 import type { LayerType, RecordingState } from '../types';
 import { transportController } from './TransportController';
+import { logger } from './utils/logger';
 
 export interface LayerRecorderCallbacks {
   onStateChanged?: (state: RecordingState, layerType: LayerType | null) => void;
@@ -72,7 +73,7 @@ export class LayerRecorder {
     // Create recorder destination
     this.recorderDest = audioContext.createMediaStreamDestination();
 
-    console.log('[LayerRecorder] Initialized');
+    logger.info('[LayerRecorder] Initialized');
 
     return {
       drumsCapture: this.drumsCapture,
@@ -103,12 +104,12 @@ export class LayerRecorder {
    */
   startRecording(layerType: LayerType): void {
     if (!this.audioContext || !this.recorderDest) {
-      console.error('[LayerRecorder] Not initialized');
+      logger.error('[LayerRecorder] Not initialized');
       return;
     }
 
     if (this.recordingState !== 'idle') {
-      console.warn('[LayerRecorder] Already recording or waiting');
+      logger.warn('[LayerRecorder] Already recording or waiting');
       return;
     }
 
@@ -134,7 +135,7 @@ export class LayerRecorder {
       const timeToNextBoundary = transportController.getTimeToNextLoopBoundary();
       this.maxRecordingLength = transportController.getLoopLengthMs();
 
-      console.log(`[LayerRecorder] Waiting ${timeToNextBoundary.toFixed(0)}ms for loop boundary`);
+      logger.debug(`[LayerRecorder] Waiting ${timeToNextBoundary.toFixed(0)}ms for loop boundary`);
 
       this.boundaryTimeoutId = window.setTimeout(() => {
         this.beginRecording();
@@ -181,9 +182,9 @@ export class LayerRecorder {
       this.startDurationTracking();
 
       this.notifyStateChanged();
-      console.log(`[LayerRecorder] Recording ${this.activeLayerType}`);
+      logger.info(`[LayerRecorder] Recording ${this.activeLayerType}`);
     } catch (error) {
-      console.error('[LayerRecorder] Failed to start recording:', error);
+      logger.error('[LayerRecorder] Failed to start recording:', error);
       this.reset();
     }
   }
@@ -213,7 +214,7 @@ export class LayerRecorder {
     this.recordingState = 'processing';
     this.notifyStateChanged();
 
-    console.log('[LayerRecorder] Recording stopped');
+    logger.info('[LayerRecorder] Recording stopped');
   }
 
   /**
@@ -235,7 +236,7 @@ export class LayerRecorder {
       // Decode to AudioBuffer
       const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
 
-      console.log(`[LayerRecorder] Processed: ${audioBuffer.duration.toFixed(2)}s`);
+      logger.debug(`[LayerRecorder] Processed: ${audioBuffer.duration.toFixed(2)}s`);
 
       // Notify completion
       const layerType = this.activeLayerType;
@@ -244,7 +245,7 @@ export class LayerRecorder {
       // Reset state
       this.reset();
     } catch (error) {
-      console.error('[LayerRecorder] Failed to process recording:', error);
+      logger.error('[LayerRecorder] Failed to process recording:', error);
       this.reset();
     }
   }

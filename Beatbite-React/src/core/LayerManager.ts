@@ -20,6 +20,7 @@
 import type { Layer, LayerType, LayerKind, LayerInfo, DrumHitEvent, BassNoteEvent, GuitarNoteEvent, PianoNoteEvent } from '../types';
 import { drumEventPlayer } from './DrumEventPlayer';
 import { bassEventPlayer, guitarEventPlayer, pianoEventPlayer } from './MelodicEventPlayer';
+import { logger } from './utils/logger';
 
 // Event layer configuration for generic handling
 type EventLayerKind = Exclude<LayerKind, 'audio'>;
@@ -88,7 +89,7 @@ export class LayerManager {
     this.masterGain.gain.value = 1.0;
     this.masterGain.connect(audioContext.destination);
 
-    console.log('[LayerManager] Initialized');
+    logger.info('[LayerManager] Initialized');
     return this.masterGain;
   }
 
@@ -139,7 +140,7 @@ export class LayerManager {
     this.layers.set(id, layer);
     this.notifyLayersChanged();
 
-    console.log(`[LayerManager] Added audio layer: ${layerName} (${audioBuffer.duration.toFixed(2)}s)`);
+    logger.debug(`[LayerManager] Added audio layer: ${layerName} (${audioBuffer.duration.toFixed(2)}s)`);
 
     return layer;
   }
@@ -180,7 +181,7 @@ export class LayerManager {
     this.layers.set(id, layer);
     this.notifyLayersChanged();
 
-    console.log(`[LayerManager] Added ${config.displayName.toLowerCase()} event layer: ${layerName} (${(events as unknown[]).length} events)`);
+    logger.debug(`[LayerManager] Added ${config.displayName.toLowerCase()} event layer: ${layerName} (${(events as unknown[]).length} events)`);
 
     return layer;
   }
@@ -232,7 +233,7 @@ export class LayerManager {
     this.layers.delete(id);
     this.notifyLayersChanged();
 
-    console.log(`[LayerManager] Removed layer: ${layer.name}`);
+    logger.debug(`[LayerManager] Removed layer: ${layer.name}`);
   }
 
   /**
@@ -256,7 +257,7 @@ export class LayerManager {
       this.startLayerPlayback(layer);
     }
 
-    console.log(`[LayerManager] Replaced layer audio: ${layer.name}`);
+    logger.debug(`[LayerManager] Replaced layer audio: ${layer.name}`);
   }
 
   /**
@@ -322,7 +323,7 @@ export class LayerManager {
     }
 
     this.callbacks.onPlaybackStateChanged?.(true);
-    console.log('[LayerManager] Started all layers');
+    logger.info('[LayerManager] Started all layers');
   }
 
   /**
@@ -342,7 +343,7 @@ export class LayerManager {
     }
 
     this.callbacks.onPlaybackStateChanged?.(false);
-    console.log('[LayerManager] Stopped all layers');
+    logger.info('[LayerManager] Stopped all layers');
   }
 
   /**

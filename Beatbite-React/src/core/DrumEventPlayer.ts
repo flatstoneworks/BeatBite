@@ -11,6 +11,7 @@
 
 import type { DrumHitEvent, BeatboxDrumType } from '../types';
 import { drumSynthesizer, type DrumType } from './DrumSynthesizer';
+import { logger } from './utils/logger';
 
 export interface DrumEventPlayerCallbacks {
   onEventPlayed?: (event: DrumHitEvent) => void;
@@ -43,7 +44,7 @@ export class DrumEventPlayer {
    */
   initialize(audioContext: AudioContext): void {
     this.audioContext = audioContext;
-    console.log('[DrumEventPlayer] Initialized');
+    logger.info('[DrumEventPlayer] Initialized');
   }
 
   /**
@@ -60,7 +61,7 @@ export class DrumEventPlayer {
     this.events = [...events].sort((a, b) => a.timeInLoop - b.timeInLoop);
     this.loopLengthMs = loopLengthMs;
     this.scheduledEvents.clear();
-    console.log(`[DrumEventPlayer] Loaded ${events.length} events, loop=${loopLengthMs}ms`);
+    logger.info(`[DrumEventPlayer] Loaded ${events.length} events, loop=${loopLengthMs}ms`);
   }
 
   /**
@@ -81,7 +82,7 @@ export class DrumEventPlayer {
     this.scheduler();
 
     this.callbacks.onPlaybackStarted?.();
-    console.log('[DrumEventPlayer] Started playback');
+    logger.info('[DrumEventPlayer] Started playback');
   }
 
   /**
@@ -97,7 +98,7 @@ export class DrumEventPlayer {
 
     this.scheduledEvents.clear();
     this.callbacks.onPlaybackStopped?.();
-    console.log('[DrumEventPlayer] Stopped playback');
+    logger.info('[DrumEventPlayer] Stopped playback');
   }
 
   /**

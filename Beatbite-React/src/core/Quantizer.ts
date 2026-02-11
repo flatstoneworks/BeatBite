@@ -10,6 +10,7 @@
  */
 
 import { transportController } from './TransportController';
+import { logger } from './utils/logger';
 
 export interface QuantizerConfig {
   subdivision: number;  // 16 = 16th notes, 8 = 8th notes, etc.
@@ -34,7 +35,7 @@ export class Quantizer {
    */
   initialize(audioContext: AudioContext): void {
     this.audioContext = audioContext;
-    console.log('[Quantizer] Initialized');
+    logger.info('[Quantizer] Initialized');
   }
 
   /**

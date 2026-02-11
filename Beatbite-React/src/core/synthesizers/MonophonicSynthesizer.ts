@@ -6,6 +6,7 @@
  */
 
 import { frequencyToNoteName } from '../utils/audioUtils';
+import { logger } from '../utils/logger';
 import { AbstractSynthesizer } from './AbstractSynthesizer';
 
 export abstract class MonophonicSynthesizer<StyleType extends string> extends AbstractSynthesizer<StyleType> {
@@ -68,7 +69,7 @@ export abstract class MonophonicSynthesizer<StyleType extends string> extends Ab
     const noteName = frequencyToNoteName(instrumentFreq);
     this.onNoteChanged?.(instrumentFreq, noteName);
 
-    console.log(
+    logger.debug(
       `[${this.logTag}] triggerNote: ${noteName} (${instrumentFreq.toFixed(1)}Hz) vel=${velocity.toFixed(2)}`
     );
 

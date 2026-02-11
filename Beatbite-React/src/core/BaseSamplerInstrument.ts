@@ -16,6 +16,7 @@
 
 import * as Tone from 'tone';
 import { frequencyToNoteName } from './utils/audioUtils';
+import { logger } from './utils/logger';
 
 // Instrument frequency range configuration
 export interface InstrumentRange {
@@ -105,11 +106,11 @@ export abstract class BaseSamplerInstrument<TStyle extends string> {
     if (this.loadPromise) return this.loadPromise;
 
     this.isLoading = true;
-    console.log(`[${this.logPrefix}] Starting load...`);
+    logger.info(`[${this.logPrefix}] Starting load...`);
 
     // Ensure Tone.js audio context is started
     await Tone.start();
-    console.log(`[${this.logPrefix}] Tone.js context started`);
+    logger.info(`[${this.logPrefix}] Tone.js context started`);
 
     this.loadPromise = new Promise((resolve, reject) => {
       try {
@@ -124,12 +125,12 @@ export abstract class BaseSamplerInstrument<TStyle extends string> {
           onload: () => {
             this.isLoaded = true;
             this.isLoading = false;
-            console.log(`[${this.logPrefix}] Samples loaded successfully`);
+            logger.info(`[${this.logPrefix}] Samples loaded successfully`);
             this.onLoaded?.();
             resolve();
           },
           onerror: (error) => {
-            console.error(`[${this.logPrefix}] Failed to load samples:`, error);
+            logger.error(`[${this.logPrefix}] Failed to load samples:`, error);
             this.isLoading = false;
             reject(error);
           },
@@ -141,7 +142,7 @@ export abstract class BaseSamplerInstrument<TStyle extends string> {
         this.applyStyle();
 
       } catch (error) {
-        console.error(`[${this.logPrefix}] Initialization error:`, error);
+        logger.error(`[${this.logPrefix}] Initialization error:`, error);
         this.isLoading = false;
         reject(error);
       }
@@ -156,7 +157,7 @@ export abstract class BaseSamplerInstrument<TStyle extends string> {
    */
   protected applyStyle(): void {
     const config = this.styleConfigs[this.style];
-    console.log(`[${this.logPrefix}] Applying style: ${this.style}`);
+    logger.debug(`[${this.logPrefix}] Applying style: ${this.style}`);
 
     if (this.filter) {
       this.filter.frequency.value = config.filterFreq;
@@ -215,7 +216,7 @@ export abstract class BaseSamplerInstrument<TStyle extends string> {
   setStyle(style: TStyle): void {
     this.style = style;
     this.applyStyle();
-    console.log(`[${this.logPrefix}] Style set to: ${style}`);
+    logger.debug(`[${this.logPrefix}] Style set to: ${style}`);
   }
 
   // ============ Volume & Octave ============
@@ -289,7 +290,7 @@ export abstract class BaseSamplerInstrument<TStyle extends string> {
     const noteName = frequencyToNoteName(instrumentFreq);
     this.onNoteChanged?.(instrumentFreq, noteName);
 
-    console.log(
+    logger.debug(
       `[${this.logPrefix}] triggerNoteFromVoice: ${noteName} (${instrumentFreq.toFixed(1)}Hz) vel=${velocity.toFixed(2)} style=${this.style}`
     );
 
@@ -328,7 +329,7 @@ export abstract class BaseSamplerInstrument<TStyle extends string> {
    */
   updateFromPitch(frequency: number, confidence: number): void {
     if (!this.sampler || !this.isLoaded) {
-      console.log(`[${this.logPrefix}] updateFromPitch: not ready`);
+      logger.debug(`[${this.logPrefix}] updateFromPitch: not ready`);
       return;
     }
 
@@ -347,7 +348,7 @@ export abstract class BaseSamplerInstrument<TStyle extends string> {
     // Check if we need to trigger a new note
     if (!this.isPlaying) {
       // Start new note
-      console.log(`[${this.logPrefix}] Playing note: ${newNoteName} at ${instrumentFreq.toFixed(1)}Hz`);
+      logger.debug(`[${this.logPrefix}] Playing note: ${newNoteName} at ${instrumentFreq.toFixed(1)}Hz`);
       this.playNote(instrumentFreq, 0.8);
       this.onNoteChanged?.(instrumentFreq, newNoteName);
     } else {

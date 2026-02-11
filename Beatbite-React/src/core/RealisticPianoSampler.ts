@@ -13,6 +13,7 @@
 
 import * as Tone from 'tone';
 import { frequencyToNoteName } from './utils/audioUtils';
+import { logger } from './utils/logger';
 
 export type RealisticPianoStyle = 'acoustic' | 'bright' | 'warm' | 'honkytonk';
 
@@ -193,12 +194,12 @@ export class RealisticPianoSampler {
           onload: () => {
             this.isLoaded = true;
             this.isLoading = false;
-            console.log('[RealisticPiano] Samples loaded');
+            logger.info('[RealisticPiano] Samples loaded');
             this.onLoaded?.();
             resolve();
           },
           onerror: (error) => {
-            console.error('[RealisticPiano] Failed to load samples:', error);
+            logger.error('[RealisticPiano] Failed to load samples:', error);
             this.isLoading = false;
             reject(error);
           },
@@ -210,7 +211,7 @@ export class RealisticPianoSampler {
         this.applyStyle();
 
       } catch (error) {
-        console.error('[RealisticPiano] Initialization error:', error);
+        logger.error('[RealisticPiano] Initialization error:', error);
         this.isLoading = false;
         reject(error);
       }
@@ -380,7 +381,7 @@ export class RealisticPianoSampler {
     const noteName = frequencyToNoteName(pianoFreq);
     this.onNoteChanged?.(pianoFreq, noteName);
 
-    console.log(
+    logger.debug(
       `[RealisticPiano] triggerNoteFromVoice: ${noteName} (${pianoFreq.toFixed(1)}Hz) vel=${velocity.toFixed(2)}`
     );
 

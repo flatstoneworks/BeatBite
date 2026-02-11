@@ -22,6 +22,7 @@
  */
 
 import { createNoiseBuffer, createDistortionCurve } from './utils/audioUtils';
+import { logger } from './utils/logger';
 
 export type DrumType = 'kick' | 'snare' | 'tom' | 'hihat' | 'hihat_open';
 export type DrumKitType = 'electronic' | 'acoustic' | 'jazz' | 'vintage' | 'rock';
@@ -107,7 +108,7 @@ export class DrumSynthesizer {
     this.masterGain.gain.value = this.volume;
     this.masterGain.connect(audioContext.destination);
 
-    console.log('[DrumSynth] Initialized');
+    logger.info('[DrumSynth] Initialized');
   }
 
   /**
@@ -122,7 +123,7 @@ export class DrumSynthesizer {
    */
   setKit(kit: DrumKitType): void {
     this.currentKit = kit;
-    console.log(`[DrumSynth] Kit changed to: ${kit}`);
+    logger.debug(`[DrumSynth] Kit changed to: ${kit}`);
   }
 
   /**

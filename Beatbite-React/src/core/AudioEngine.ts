@@ -31,6 +31,7 @@ import { metronomeAudio } from './MetronomeAudio';
 import { melodicEventRecorder } from './MelodicEventRecorder';
 import { voiceOnsetDetector } from './VoiceOnsetDetector';
 import { loopQuantizer } from './LoopQuantizer';
+import { logger } from './utils/logger';
 // Note: MelodicEventPlayers are used via LayerManager, not directly here
 import type { LayerType, LayerInfo, TransportState, RecordingState as LayerRecordingState, DrumHitEvent, BassNoteEvent, GuitarNoteEvent, PianoNoteEvent, MelodicNoteEvent } from '../types';
 
@@ -135,20 +136,20 @@ class AudioEngine {
       // Check if we can get actual latency info
       if ('baseLatency' in this.audioContext) {
         const baseLatency = (this.audioContext as AudioContext & { baseLatency: number }).baseLatency;
-        console.log(`[AudioEngine] Base latency: ${baseLatency * 1000}ms`);
+        logger.info(`[AudioEngine] Base latency: ${baseLatency * 1000}ms`);
       }
 
       if ('outputLatency' in this.audioContext) {
         const outputLatency = (this.audioContext as AudioContext & { outputLatency: number }).outputLatency;
-        console.log(`[AudioEngine] Output latency: ${outputLatency * 1000}ms`);
+        logger.info(`[AudioEngine] Output latency: ${outputLatency * 1000}ms`);
       }
 
       this.isInitialized = true;
-      console.log('[AudioEngine] Initialized successfully');
+      logger.info('[AudioEngine] Initialized successfully');
       return true;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('[AudioEngine] Initialization failed:', message);
+      logger.error('[AudioEngine] Initialization failed:', message);
       this.callbacks.onError?.(`Failed to initialize audio engine: ${message}`);
       return false;
     }
@@ -190,7 +191,7 @@ class AudioEngine {
       return true;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('[AudioEngine] Permission request failed:', message);
+      logger.error('[AudioEngine] Permission request failed:', message);
       this.callbacks.onError?.(`Microphone permission required: ${message}`);
       return false;
     }
@@ -392,12 +393,12 @@ class AudioEngine {
 
       this.isPassthroughActive = true;
       this.callbacks.onStateChanged?.(true);
-      console.log('[AudioEngine] Passthrough started');
+      logger.debug('[AudioEngine] Passthrough started');
 
       return true;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('[AudioEngine] Failed to start passthrough:', message);
+      logger.error('[AudioEngine] Failed to start passthrough:', message);
       this.callbacks.onError?.(`Failed to start audio: ${message}`);
       this.stopPassthrough();
       return false;
@@ -433,7 +434,7 @@ class AudioEngine {
 
     this.isPassthroughActive = false;
     this.callbacks.onStateChanged?.(false);
-    console.log('[AudioEngine] Passthrough stopped');
+    logger.debug('[AudioEngine] Passthrough stopped');
   }
 
   /**
@@ -544,7 +545,7 @@ class AudioEngine {
    */
   setGuitarSynthType(synthType: GuitarSynthType): void {
     this.guitarSynthType = synthType;
-    console.log(`[AudioEngine] Guitar synth type set to: ${synthType}`);
+    logger.debug(`[AudioEngine] Guitar synth type set to: ${synthType}`);
   }
 
   /**
@@ -559,7 +560,7 @@ class AudioEngine {
    */
   setElectricGuitarStyle(style: ElectricGuitarStyle): void {
     electricGuitarSampler.setStyle(style);
-    console.log(`[AudioEngine] Electric guitar style set to: ${style}`);
+    logger.debug(`[AudioEngine] Electric guitar style set to: ${style}`);
   }
 
   /**
@@ -726,7 +727,7 @@ class AudioEngine {
       const bpmResult = bpmDetector.detectFromBuffer(audioBuffer);
       transportController.setLoopFromBuffer(audioBuffer, bpmResult.bpm);
       layerRecorder.setIsFirstLayer(false);
-      console.log(`[AudioEngine] Base loop: ${bpmResult.bpm} BPM, ${bpmResult.bars} bars`);
+      logger.debug(`[AudioEngine] Base loop: ${bpmResult.bpm} BPM, ${bpmResult.bars} bars`);
     }
 
     // Add the layer to layer manager
@@ -895,7 +896,7 @@ class AudioEngine {
     layerManager.setLoopLength(this.loopLengthMs);
     drumEventRecorder.setBpm(bpm);
 
-    console.log(`[AudioEngine] Tempo set: ${bpm} BPM, ${bars} bars, loop=${this.loopLengthMs.toFixed(0)}ms`);
+    logger.info(`[AudioEngine] Tempo set: ${bpm} BPM, ${bars} bars, loop=${this.loopLengthMs.toFixed(0)}ms`);
   }
 
   /**
@@ -904,7 +905,7 @@ class AudioEngine {
    */
   startDrumEventRecording(): void {
     if (this.loopLengthMs === 0) {
-      console.warn('[AudioEngine] Cannot start drum recording without tempo set');
+      logger.warn('[AudioEngine] Cannot start drum recording without tempo set');
       return;
     }
 
@@ -955,7 +956,7 @@ class AudioEngine {
     }
 
     this.callbacks.onLayerRecordingStateChanged?.('idle', null);
-    console.log(`[AudioEngine] Drum event recording complete: ${cleanedEvents.length} events`);
+    logger.debug(`[AudioEngine] Drum event recording complete: ${cleanedEvents.length} events`);
   }
 
   // ==================== New Melodic Event Recording ====================
@@ -975,7 +976,7 @@ class AudioEngine {
    */
   startMelodicEventRecording(instrumentType: 'bass' | 'guitar' | 'piano'): void {
     if (this.loopLengthMs === 0) {
-      console.warn('[AudioEngine] Cannot start melodic recording without loop length set');
+      logger.warn('[AudioEngine] Cannot start melodic recording without loop length set');
       return;
     }
 
@@ -1024,7 +1025,7 @@ class AudioEngine {
 
     this.callbacks.onLayerRecordingStateChanged?.('waiting', instrumentType);
     melodicEventRecorder.startRecording(this.loopLengthMs);
-    console.log(`[AudioEngine] Started ${instrumentType} melodic recording`);
+    logger.debug(`[AudioEngine] Started ${instrumentType} melodic recording`);
   }
 
   /**
@@ -1063,7 +1064,7 @@ class AudioEngine {
     }
 
     this.callbacks.onLayerRecordingStateChanged?.('idle', null);
-    console.log(`[AudioEngine] ${instrumentType} melodic recording complete: ${styledEvents.length} events`);
+    logger.debug(`[AudioEngine] ${instrumentType} melodic recording complete: ${styledEvents.length} events`);
   }
 
   /**
@@ -1083,13 +1084,13 @@ class AudioEngine {
    */
   startVariableDrumRecording(bpm: number): void {
     if (!this.pitchAnalyzerNode) {
-      console.warn('[AudioEngine] Cannot start drum recording - analyzer not initialized');
+      logger.warn('[AudioEngine] Cannot start drum recording - analyzer not initialized');
       return;
     }
 
     // Initialize beatbox detector
     if (!this.audioContext) {
-      console.warn('[AudioEngine] Cannot start drum recording - audio context not initialized');
+      logger.warn('[AudioEngine] Cannot start drum recording - audio context not initialized');
       return;
     }
     beatboxDetector.initialize(this.audioContext);
@@ -1155,7 +1156,7 @@ class AudioEngine {
     beatboxDetector.setEnabled(true);
 
     this.callbacks.onLayerRecordingStateChanged?.('recording', 'drums');
-    console.log(`[AudioEngine] Started variable-length drum recording at ${bpm} BPM`);
+    logger.debug(`[AudioEngine] Started variable-length drum recording at ${bpm} BPM`);
   }
 
   /**
@@ -1193,7 +1194,7 @@ class AudioEngine {
     }
 
     this.callbacks.onLayerRecordingStateChanged?.('idle', null);
-    console.log(`[AudioEngine] Variable drum recording complete: ${filteredEvents.length} events, ${quantized.bars} bars, ${this.loopLengthMs}ms`);
+    logger.debug(`[AudioEngine] Variable drum recording complete: ${filteredEvents.length} events, ${quantized.bars} bars, ${this.loopLengthMs}ms`);
 
     return {
       events: filteredEvents,
@@ -1292,7 +1293,7 @@ class AudioEngine {
     this.currentLatency = latency;
     this.callbacks.onLatencyMeasured?.(latency);
 
-    console.log(`[AudioEngine] Estimated latency: ${latency.toFixed(1)}ms`);
+    logger.debug(`[AudioEngine] Estimated latency: ${latency.toFixed(1)}ms`);
     return latency;
   }
 
@@ -1368,7 +1369,7 @@ class AudioEngine {
     }
 
     this.isInitialized = false;
-    console.log('[AudioEngine] Disposed');
+    logger.info('[AudioEngine] Disposed');
   }
 }
 

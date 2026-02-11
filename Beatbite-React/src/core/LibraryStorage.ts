@@ -13,6 +13,7 @@ import type {
   GuitarNoteEvent,
   PianoNoteEvent,
 } from '../types';
+import { logger } from './utils/logger';
 
 /**
  * Serialized layer data for storage.
@@ -81,13 +82,13 @@ export class LibraryStorage {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
       request.onerror = () => {
-        console.error('[LibraryStorage] Failed to open database:', request.error);
+        logger.error('[LibraryStorage] Failed to open database:', request.error);
         reject(request.error);
       };
 
       request.onsuccess = () => {
         this.db = request.result;
-        console.log('[LibraryStorage] Database opened successfully');
+        logger.info('[LibraryStorage] Database opened successfully');
         resolve();
       };
 
@@ -99,7 +100,7 @@ export class LibraryStorage {
           const store = db.createObjectStore(SONGS_STORE, { keyPath: 'id' });
           store.createIndex('createdAt', 'createdAt', { unique: false });
           store.createIndex('name', 'name', { unique: false });
-          console.log('[LibraryStorage] Created songs store');
+          logger.info('[LibraryStorage] Created songs store');
         }
       };
     });
@@ -149,12 +150,12 @@ export class LibraryStorage {
       const request = store.put(fullSong);
 
       request.onsuccess = () => {
-        console.log('[LibraryStorage] Song saved:', fullSong.id);
+        logger.debug('[LibraryStorage] Song saved:', fullSong.id);
         resolve(fullSong.id);
       };
 
       request.onerror = () => {
-        console.error('[LibraryStorage] Failed to save song:', request.error);
+        logger.error('[LibraryStorage] Failed to save song:', request.error);
         reject(request.error);
       };
     });
@@ -195,7 +196,7 @@ export class LibraryStorage {
       };
 
       request.onerror = () => {
-        console.error('[LibraryStorage] Failed to get songs list:', request.error);
+        logger.error('[LibraryStorage] Failed to get songs list:', request.error);
         reject(request.error);
       };
     });
@@ -217,7 +218,7 @@ export class LibraryStorage {
       };
 
       request.onerror = () => {
-        console.error('[LibraryStorage] Failed to get song:', request.error);
+        logger.error('[LibraryStorage] Failed to get song:', request.error);
         reject(request.error);
       };
     });
@@ -235,12 +236,12 @@ export class LibraryStorage {
       const request = store.delete(id);
 
       request.onsuccess = () => {
-        console.log('[LibraryStorage] Song deleted:', id);
+        logger.debug('[LibraryStorage] Song deleted:', id);
         resolve();
       };
 
       request.onerror = () => {
-        console.error('[LibraryStorage] Failed to delete song:', request.error);
+        logger.error('[LibraryStorage] Failed to delete song:', request.error);
         reject(request.error);
       };
     });
@@ -266,12 +267,12 @@ export class LibraryStorage {
       const request = store.put(song);
 
       request.onsuccess = () => {
-        console.log('[LibraryStorage] Song renamed:', id, newName);
+        logger.debug('[LibraryStorage] Song renamed:', id, newName);
         resolve();
       };
 
       request.onerror = () => {
-        console.error('[LibraryStorage] Failed to rename song:', request.error);
+        logger.error('[LibraryStorage] Failed to rename song:', request.error);
         reject(request.error);
       };
     });
@@ -405,7 +406,7 @@ export class LibraryStorage {
       const request = store.clear();
 
       request.onsuccess = () => {
-        console.log('[LibraryStorage] All songs cleared');
+        logger.debug('[LibraryStorage] All songs cleared');
         resolve();
       };
 

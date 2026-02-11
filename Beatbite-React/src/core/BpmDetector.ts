@@ -10,6 +10,7 @@
  */
 
 import type { BpmResult } from '../types';
+import { logger } from './utils/logger';
 
 // BPM detection range
 const MIN_BPM = 60;
@@ -260,7 +261,7 @@ export class BpmDetector {
       if (bars < 1) bars = 1;
     }
 
-    console.log(`[BpmDetector] Fallback: ${bpm} BPM, ${bars} bars`);
+    logger.debug(`[BpmDetector] Fallback: ${bpm} BPM, ${bars} bars`);
 
     return {
       bpm,
