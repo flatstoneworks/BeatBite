@@ -570,42 +570,42 @@ export interface Layer extends LayerInfo {
 /**
  * Type guard for drum event layers.
  */
-export function isDrumEventLayer(layer: Layer | LayerInfo): boolean {
+export function isDrumEventLayer(layer: Layer | LayerInfo): layer is (Layer | LayerInfo) & { kind: 'drum_events' } {
   return layer.kind === 'drum_events';
 }
 
 /**
  * Type guard for bass event layers.
  */
-export function isBassEventLayer(layer: Layer | LayerInfo): boolean {
+export function isBassEventLayer(layer: Layer | LayerInfo): layer is (Layer | LayerInfo) & { kind: 'bass_events' } {
   return layer.kind === 'bass_events';
 }
 
 /**
  * Type guard for guitar event layers.
  */
-export function isGuitarEventLayer(layer: Layer | LayerInfo): boolean {
+export function isGuitarEventLayer(layer: Layer | LayerInfo): layer is (Layer | LayerInfo) & { kind: 'guitar_events' } {
   return layer.kind === 'guitar_events';
 }
 
 /**
  * Type guard for piano event layers.
  */
-export function isPianoEventLayer(layer: Layer | LayerInfo): boolean {
+export function isPianoEventLayer(layer: Layer | LayerInfo): layer is (Layer | LayerInfo) & { kind: 'piano_events' } {
   return layer.kind === 'piano_events';
 }
 
 /**
  * Type guard for any melodic event layer (bass, guitar, piano).
  */
-export function isMelodicEventLayer(layer: Layer | LayerInfo): boolean {
+export function isMelodicEventLayer(layer: Layer | LayerInfo): layer is (Layer | LayerInfo) & { kind: 'bass_events' | 'guitar_events' | 'piano_events' } {
   return layer.kind === 'bass_events' || layer.kind === 'guitar_events' || layer.kind === 'piano_events';
 }
 
 /**
  * Type guard for audio layers.
  */
-export function isAudioLayer(layer: Layer | LayerInfo): boolean {
+export function isAudioLayer(layer: Layer | LayerInfo): layer is (Layer | LayerInfo) & { kind: 'audio' | undefined } {
   return layer.kind === 'audio' || layer.kind === undefined;
 }
 

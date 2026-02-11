@@ -11,6 +11,8 @@
  * - Wobble bass: LFO-modulated filter for dubstep-style wobble
  */
 
+import { frequencyToNoteName } from './utils/audioUtils';
+
 export type BassStyle = 'sub' | 'synth' | 'pluck' | 'wobble';
 
 export interface BassConfig {
@@ -128,19 +130,6 @@ export class BassSynthesizer {
   }
 
   /**
-   * Get note name from frequency.
-   */
-  private frequencyToNoteName(frequency: number): string {
-    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const a4 = 440;
-    const semitones = 12 * Math.log2(frequency / a4);
-    const noteIndex = Math.round(semitones) + 9; // A is at index 9
-    const octave = Math.floor((noteIndex + 3) / 12) + 4;
-    const noteName = noteNames[((noteIndex % 12) + 12) % 12];
-    return `${noteName}${octave}`;
-  }
-
-  /**
    * Update bass from detected pitch.
    * Called continuously from audio engine.
    * Bass only plays while voice is detected - stops immediately when voice stops.
@@ -166,7 +155,7 @@ export class BassSynthesizer {
       this.glideToFrequency(bassFreq);
     }
 
-    const noteName = this.frequencyToNoteName(bassFreq);
+    const noteName = frequencyToNoteName(bassFreq);
     this.onNoteChanged?.(bassFreq, noteName);
   }
 
@@ -554,7 +543,7 @@ export class BassSynthesizer {
     this.volume = prevVolume;
 
     // Notify
-    const noteName = this.frequencyToNoteName(bassFreq);
+    const noteName = frequencyToNoteName(bassFreq);
     this.onNoteChanged?.(bassFreq, noteName);
 
     console.log(
@@ -605,7 +594,7 @@ export class BassSynthesizer {
     // Restore volume setting
     this.volume = prevVolume;
 
-    const noteName = this.frequencyToNoteName(frequency);
+    const noteName = frequencyToNoteName(frequency);
     this.onNoteChanged?.(frequency, noteName);
   }
 

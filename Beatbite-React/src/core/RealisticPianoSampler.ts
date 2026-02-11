@@ -12,6 +12,7 @@
  */
 
 import * as Tone from 'tone';
+import { frequencyToNoteName } from './utils/audioUtils';
 
 export type RealisticPianoStyle = 'acoustic' | 'bright' | 'warm' | 'honkytonk';
 
@@ -308,32 +309,6 @@ export class RealisticPianoSampler {
   }
 
   /**
-   * Convert frequency to note name.
-   */
-  private frequencyToNoteName(frequency: number): string {
-    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const a4 = 440;
-    const semitones = 12 * Math.log2(frequency / a4);
-    const noteIndex = Math.round(semitones) + 9;
-    const octave = Math.floor((noteIndex + 3) / 12) + 4;
-    const noteName = noteNames[((noteIndex % 12) + 12) % 12];
-    return `${noteName}${octave}`;
-  }
-
-  /**
-   * Convert frequency to Tone.js note format.
-   */
-  private frequencyToToneNote(frequency: number): string {
-    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const a4 = 440;
-    const semitones = 12 * Math.log2(frequency / a4);
-    const noteIndex = Math.round(semitones) + 9;
-    const octave = Math.floor((noteIndex + 3) / 12) + 4;
-    const noteName = noteNames[((noteIndex % 12) + 12) % 12];
-    return `${noteName}${octave}`;
-  }
-
-  /**
    * Update piano from detected pitch.
    * Called continuously from audio engine.
    */
@@ -352,8 +327,8 @@ export class RealisticPianoSampler {
     const pianoFreq = this.voiceToPianoFrequency(frequency);
 
     // Check if this is a new note
-    const currentNote = this.frequencyToNoteName(this.currentFrequency);
-    const newNote = this.frequencyToNoteName(pianoFreq);
+    const currentNote = frequencyToNoteName(this.currentFrequency);
+    const newNote = frequencyToNoteName(pianoFreq);
 
     if (!this.isPlaying || currentNote !== newNote) {
       this.releaseAllNotes();
@@ -372,7 +347,7 @@ export class RealisticPianoSampler {
     this.currentFrequency = frequency;
     this.isPlaying = true;
 
-    const noteName = this.frequencyToToneNote(frequency);
+    const noteName = frequencyToNoteName(frequency);
 
     // Apply detune for honky-tonk style
     const config = STYLE_CONFIGS[this.style];
@@ -381,7 +356,7 @@ export class RealisticPianoSampler {
       this.sampler.triggerAttack(noteName, Tone.now(), velocity);
       // Play a second note slightly detuned (simulating second string)
       const detuneFreq = frequency * Math.pow(2, config.detune / 1200);
-      const detunedNote = this.frequencyToToneNote(detuneFreq);
+      const detunedNote = frequencyToNoteName(detuneFreq);
       this.sampler.triggerAttack(detunedNote, Tone.now(), velocity * 0.7);
       this.activeNotes.add(noteName);
       this.activeNotes.add(detunedNote);
@@ -402,7 +377,7 @@ export class RealisticPianoSampler {
     const pianoFreq = this.voiceToPianoFrequency(frequency);
     this.playNote(pianoFreq, velocity);
 
-    const noteName = this.frequencyToNoteName(pianoFreq);
+    const noteName = frequencyToNoteName(pianoFreq);
     this.onNoteChanged?.(pianoFreq, noteName);
 
     console.log(
@@ -427,7 +402,7 @@ export class RealisticPianoSampler {
     this.releaseAllNotes();
     this.playNote(frequency, velocity);
 
-    const noteName = this.frequencyToNoteName(frequency);
+    const noteName = frequencyToNoteName(frequency);
     this.onNoteChanged?.(frequency, noteName);
   }
 

@@ -11,6 +11,8 @@
  * - Muted: Palm-muted punch with short envelope
  */
 
+import { frequencyToNoteName, createDistortionCurve } from './utils/audioUtils';
+
 export type GuitarStyle = 'clean' | 'distorted' | 'acoustic' | 'muted';
 
 export interface GuitarConfig {
@@ -128,19 +130,6 @@ export class GuitarSynthesizer {
   }
 
   /**
-   * Get note name from frequency.
-   */
-  private frequencyToNoteName(frequency: number): string {
-    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const a4 = 440;
-    const semitones = 12 * Math.log2(frequency / a4);
-    const noteIndex = Math.round(semitones) + 9; // A is at index 9
-    const octave = Math.floor((noteIndex + 3) / 12) + 4;
-    const noteName = noteNames[((noteIndex % 12) + 12) % 12];
-    return `${noteName}${octave}`;
-  }
-
-  /**
    * Update guitar from detected pitch.
    * Called continuously from audio engine.
    */
@@ -165,7 +154,7 @@ export class GuitarSynthesizer {
       this.glideToFrequency(guitarFreq);
     }
 
-    const noteName = this.frequencyToNoteName(guitarFreq);
+    const noteName = frequencyToNoteName(guitarFreq);
     this.onNoteChanged?.(guitarFreq, noteName);
   }
 
@@ -276,8 +265,7 @@ export class GuitarSynthesizer {
 
     // Waveshaper for distortion
     this.distortion = ctx.createWaveShaper();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.distortion.curve = this.makeDistortionCurve(50) as any;
+    this.distortion.curve = createDistortionCurve(50);
     this.distortion.oversample = '4x';
 
     // Post-distortion filter (cabinet simulation)
@@ -304,22 +292,6 @@ export class GuitarSynthesizer {
 
     this.oscillator1.start(now);
     this.oscillator2.start(now);
-  }
-
-  /**
-   * Create distortion curve for waveshaper.
-   */
-  private makeDistortionCurve(amount: number): Float32Array | null {
-    const samples = 44100;
-    const curve = new Float32Array(samples);
-    const deg = Math.PI / 180;
-
-    for (let i = 0; i < samples; i++) {
-      const x = (i * 2) / samples - 1;
-      curve[i] = ((3 + amount) * x * 20 * deg) / (Math.PI + amount * Math.abs(x));
-    }
-
-    return curve;
   }
 
   /**
@@ -622,7 +594,7 @@ export class GuitarSynthesizer {
     this.volume = prevVolume;
 
     // Notify
-    const noteName = this.frequencyToNoteName(guitarFreq);
+    const noteName = frequencyToNoteName(guitarFreq);
     this.onNoteChanged?.(guitarFreq, noteName);
 
     console.log(
@@ -673,7 +645,7 @@ export class GuitarSynthesizer {
     // Restore volume setting
     this.volume = prevVolume;
 
-    const noteName = this.frequencyToNoteName(frequency);
+    const noteName = frequencyToNoteName(frequency);
     this.onNoteChanged?.(frequency, noteName);
   }
 

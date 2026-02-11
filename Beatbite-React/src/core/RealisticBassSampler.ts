@@ -12,6 +12,7 @@
  */
 
 import * as Tone from 'tone';
+import { frequencyToNoteName } from './utils/audioUtils';
 
 export type SampledBassStyle = 'finger' | 'pick' | 'slap' | 'muted';
 
@@ -315,26 +316,6 @@ export class RealisticBassSampler {
   }
 
   /**
-   * Convert frequency to note name.
-   */
-  private frequencyToNoteName(frequency: number): string {
-    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const a4 = 440;
-    const semitones = 12 * Math.log2(frequency / a4);
-    const noteIndex = Math.round(semitones) + 9;
-    const octave = Math.floor((noteIndex + 3) / 12) + 4;
-    const noteName = noteNames[((noteIndex % 12) + 12) % 12];
-    return `${noteName}${octave}`;
-  }
-
-  /**
-   * Convert frequency to Tone.js note format.
-   */
-  private frequencyToToneNote(frequency: number): string {
-    return this.frequencyToNoteName(frequency);
-  }
-
-  /**
    * Play a note at the given frequency.
    */
   playNote(frequency: number, velocity: number = 0.8): void {
@@ -343,7 +324,7 @@ export class RealisticBassSampler {
     this.currentFrequency = frequency;
     this.isPlaying = true;
 
-    const noteName = this.frequencyToToneNote(frequency);
+    const noteName = frequencyToNoteName(frequency);
 
     this.sampler.triggerAttack(noteName, Tone.now(), velocity);
     this.activeNotes.add(noteName);
@@ -360,7 +341,7 @@ export class RealisticBassSampler {
     const bassFreq = this.voiceToBassFrequency(frequency);
     this.playNote(bassFreq, velocity);
 
-    const noteName = this.frequencyToNoteName(bassFreq);
+    const noteName = frequencyToNoteName(bassFreq);
     this.onNoteChanged?.(bassFreq, noteName);
 
     console.log(
@@ -384,7 +365,7 @@ export class RealisticBassSampler {
     this.releaseAllNotes();
     this.playNote(frequency, velocity);
 
-    const noteName = this.frequencyToNoteName(frequency);
+    const noteName = frequencyToNoteName(frequency);
     this.onNoteChanged?.(frequency, noteName);
   }
 

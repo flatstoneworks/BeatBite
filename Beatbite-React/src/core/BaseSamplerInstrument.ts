@@ -15,6 +15,7 @@
  */
 
 import * as Tone from 'tone';
+import { frequencyToNoteName } from './utils/audioUtils';
 
 // Instrument frequency range configuration
 export interface InstrumentRange {
@@ -257,26 +258,6 @@ export abstract class BaseSamplerInstrument<TStyle extends string> {
     return freq;
   }
 
-  /**
-   * Convert frequency to note name (e.g., "A4", "C#3").
-   */
-  protected frequencyToNoteName(frequency: number): string {
-    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const a4 = 440;
-    const semitones = 12 * Math.log2(frequency / a4);
-    const noteIndex = Math.round(semitones) + 9;
-    const octave = Math.floor((noteIndex + 3) / 12) + 4;
-    const noteName = noteNames[((noteIndex % 12) + 12) % 12];
-    return `${noteName}${octave}`;
-  }
-
-  /**
-   * Convert frequency to Tone.js note format.
-   */
-  protected frequencyToToneNote(frequency: number): string {
-    return this.frequencyToNoteName(frequency);
-  }
-
   // ============ Note Playback ============
 
   /**
@@ -288,7 +269,7 @@ export abstract class BaseSamplerInstrument<TStyle extends string> {
     this.currentFrequency = frequency;
     this.isPlaying = true;
 
-    const noteName = this.frequencyToToneNote(frequency);
+    const noteName = frequencyToNoteName(frequency);
 
     this.sampler.triggerAttack(noteName, Tone.now(), velocity);
     this.activeNotes.add(noteName);
@@ -305,7 +286,7 @@ export abstract class BaseSamplerInstrument<TStyle extends string> {
     const instrumentFreq = this.voiceToInstrumentFrequency(frequency);
     this.playNote(instrumentFreq, velocity);
 
-    const noteName = this.frequencyToNoteName(instrumentFreq);
+    const noteName = frequencyToNoteName(instrumentFreq);
     this.onNoteChanged?.(instrumentFreq, noteName);
 
     console.log(
@@ -337,7 +318,7 @@ export abstract class BaseSamplerInstrument<TStyle extends string> {
     this.releaseAllNotes();
     this.playNote(frequency, velocity);
 
-    const noteName = this.frequencyToNoteName(frequency);
+    const noteName = frequencyToNoteName(frequency);
     this.onNoteChanged?.(frequency, noteName);
   }
 
@@ -361,7 +342,7 @@ export abstract class BaseSamplerInstrument<TStyle extends string> {
     }
 
     const instrumentFreq = this.voiceToInstrumentFrequency(frequency);
-    const newNoteName = this.frequencyToNoteName(instrumentFreq);
+    const newNoteName = frequencyToNoteName(instrumentFreq);
 
     // Check if we need to trigger a new note
     if (!this.isPlaying) {
@@ -371,7 +352,7 @@ export abstract class BaseSamplerInstrument<TStyle extends string> {
       this.onNoteChanged?.(instrumentFreq, newNoteName);
     } else {
       // Check if pitch changed to a different note
-      const currentNoteName = this.frequencyToNoteName(this.currentFrequency);
+      const currentNoteName = frequencyToNoteName(this.currentFrequency);
       if (newNoteName !== currentNoteName) {
         // New note - re-trigger
         this.releaseAllNotes();

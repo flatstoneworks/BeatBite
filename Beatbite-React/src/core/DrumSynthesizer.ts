@@ -21,6 +21,8 @@
  * - Filter envelopes for tonal shaping
  */
 
+import { createNoiseBuffer, createDistortionCurve } from './utils/audioUtils';
+
 export type DrumType = 'kick' | 'snare' | 'tom' | 'hihat' | 'hihat_open';
 export type DrumKitType = 'electronic' | 'acoustic' | 'jazz' | 'vintage' | 'rock';
 
@@ -264,7 +266,7 @@ export class DrumSynthesizer {
     const now = ctx.currentTime;
 
     // Noise for the snare wires
-    const noiseBuffer = this.createNoiseBuffer(0.3);
+    const noiseBuffer = createNoiseBuffer(this.audioContext!, 0.3);
     const noise = ctx.createBufferSource();
     noise.buffer = noiseBuffer;
 
@@ -316,7 +318,7 @@ export class DrumSynthesizer {
     gain.gain.exponentialRampToValueAtTime(0.001, now + decay);
 
     const waveshaper = ctx.createWaveShaper();
-    waveshaper.curve = this.createDistortionCurve(10);
+    waveshaper.curve = createDistortionCurve(10);
 
     osc.connect(waveshaper);
     waveshaper.connect(gain);
@@ -332,7 +334,7 @@ export class DrumSynthesizer {
 
     const actualDecay = isOpen ? Math.max(decay, 0.25) : decay;
 
-    const noiseBuffer = this.createNoiseBuffer(actualDecay);
+    const noiseBuffer = createNoiseBuffer(this.audioContext!, actualDecay);
     const noise = ctx.createBufferSource();
     noise.buffer = noiseBuffer;
 
@@ -418,7 +420,7 @@ export class DrumSynthesizer {
     mode2Gain.gain.exponentialRampToValueAtTime(0.001, now + decay * 0.8);
 
     // Beater attack (filtered noise + click)
-    const attackNoise = this.createNoiseBuffer(0.02);
+    const attackNoise = createNoiseBuffer(this.audioContext!, 0.02);
     const attackSource = ctx.createBufferSource();
     attackSource.buffer = attackNoise;
 
@@ -488,7 +490,7 @@ export class DrumSynthesizer {
     });
 
     // Snare wires (filtered noise with resonance)
-    const snareNoise = this.createNoiseBuffer(decay);
+    const snareNoise = createNoiseBuffer(this.audioContext!, decay);
     const snareSource = ctx.createBufferSource();
     snareSource.buffer = snareNoise;
 
@@ -515,7 +517,7 @@ export class DrumSynthesizer {
     snareGain.gain.exponentialRampToValueAtTime(0.001, now + decay);
 
     // Attack transient
-    const attackNoise = this.createNoiseBuffer(0.015);
+    const attackNoise = createNoiseBuffer(this.audioContext!, 0.015);
     const attackSource = ctx.createBufferSource();
     attackSource.buffer = attackNoise;
 
@@ -586,7 +588,7 @@ export class DrumSynthesizer {
     });
 
     // Stick attack
-    const attackNoise = this.createNoiseBuffer(0.01);
+    const attackNoise = createNoiseBuffer(this.audioContext!, 0.01);
     const attackSource = ctx.createBufferSource();
     attackSource.buffer = attackNoise;
 
@@ -641,7 +643,7 @@ export class DrumSynthesizer {
     });
 
     // Add noise component for shimmer
-    const noiseBuffer = this.createNoiseBuffer(actualDecay);
+    const noiseBuffer = createNoiseBuffer(this.audioContext!, actualDecay);
     const noise = ctx.createBufferSource();
     noise.buffer = noiseBuffer;
 
@@ -722,7 +724,7 @@ export class DrumSynthesizer {
     const now = ctx.currentTime;
 
     // Brush swish (filtered noise with longer attack)
-    const brushNoise = this.createNoiseBuffer(decay);
+    const brushNoise = createNoiseBuffer(this.audioContext!, decay);
     const brushSource = ctx.createBufferSource();
     brushSource.buffer = brushNoise;
 
@@ -804,7 +806,7 @@ export class DrumSynthesizer {
 
     const actualDecay = isOpen ? decay * 1.3 : decay;
 
-    const noiseBuffer = this.createNoiseBuffer(actualDecay);
+    const noiseBuffer = createNoiseBuffer(this.audioContext!, actualDecay);
     const noise = ctx.createBufferSource();
     noise.buffer = noiseBuffer;
 
@@ -938,7 +940,7 @@ export class DrumSynthesizer {
     oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
 
     // Noise with 909-style filtering
-    const noiseBuffer = this.createNoiseBuffer(decay);
+    const noiseBuffer = createNoiseBuffer(this.audioContext!, decay);
     const noise = ctx.createBufferSource();
     noise.buffer = noiseBuffer;
 
@@ -1056,7 +1058,7 @@ export class DrumSynthesizer {
     gain.gain.exponentialRampToValueAtTime(0.001, now + decay);
 
     // Strong beater attack
-    const attackNoise = this.createNoiseBuffer(0.02);
+    const attackNoise = createNoiseBuffer(this.audioContext!, 0.02);
     const attackSource = ctx.createBufferSource();
     attackSource.buffer = attackNoise;
 
@@ -1128,7 +1130,7 @@ export class DrumSynthesizer {
     bodyGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
 
     // Snare wires with more presence
-    const snareNoise = this.createNoiseBuffer(decay);
+    const snareNoise = createNoiseBuffer(this.audioContext!, decay);
     const snareSource = ctx.createBufferSource();
     snareSource.buffer = snareNoise;
 
@@ -1146,7 +1148,7 @@ export class DrumSynthesizer {
     snareGain.gain.exponentialRampToValueAtTime(0.001, now + decay);
 
     // Crack/attack
-    const crackNoise = this.createNoiseBuffer(0.01);
+    const crackNoise = createNoiseBuffer(this.audioContext!, 0.01);
     const crackSource = ctx.createBufferSource();
     crackSource.buffer = crackNoise;
 
@@ -1213,7 +1215,7 @@ export class DrumSynthesizer {
     gain2.gain.exponentialRampToValueAtTime(0.001, now + decay * 0.5);
 
     // Attack
-    const attackNoise = this.createNoiseBuffer(0.015);
+    const attackNoise = createNoiseBuffer(this.audioContext!, 0.015);
     const attackSource = ctx.createBufferSource();
     attackSource.buffer = attackNoise;
 
@@ -1245,40 +1247,6 @@ export class DrumSynthesizer {
   }
 
   // ==================== Utility Functions ====================
-
-  /**
-   * Create a buffer filled with white noise.
-   */
-  private createNoiseBuffer(duration: number): AudioBuffer {
-    const ctx = this.audioContext!;
-    const sampleRate = ctx.sampleRate;
-    const length = Math.ceil(sampleRate * duration);
-    const buffer = ctx.createBuffer(1, length, sampleRate);
-    const data = buffer.getChannelData(0);
-
-    for (let i = 0; i < length; i++) {
-      data[i] = Math.random() * 2 - 1;
-    }
-
-    return buffer;
-  }
-
-  /**
-   * Create a distortion curve for waveshaping.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private createDistortionCurve(amount: number): any {
-    const samples = 44100;
-    const curve = new Float32Array(samples);
-    const deg = Math.PI / 180;
-
-    for (let i = 0; i < samples; i++) {
-      const x = (i * 2) / samples - 1;
-      curve[i] = ((3 + amount) * x * 20 * deg) / (Math.PI + amount * Math.abs(x));
-    }
-
-    return curve;
-  }
 
   /**
    * Create a soft clipping curve for subtle saturation.

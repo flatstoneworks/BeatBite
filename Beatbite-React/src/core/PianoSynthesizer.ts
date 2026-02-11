@@ -18,6 +18,8 @@
  * - Karplus-Strong inspired decay for realistic sustain
  */
 
+import { frequencyToNoteName, createNoiseBuffer } from './utils/audioUtils';
+
 export type PianoStyle = 'grand' | 'upright' | 'electric' | 'rhodes' | 'synth';
 
 export interface PianoConfig {
@@ -133,19 +135,6 @@ export class PianoSynthesizer {
   }
 
   /**
-   * Get note name from frequency.
-   */
-  private frequencyToNoteName(frequency: number): string {
-    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const a4 = 440;
-    const semitones = 12 * Math.log2(frequency / a4);
-    const noteIndex = Math.round(semitones) + 9;
-    const octave = Math.floor((noteIndex + 3) / 12) + 4;
-    const noteName = noteNames[((noteIndex % 12) + 12) % 12];
-    return `${noteName}${octave}`;
-  }
-
-  /**
    * Update piano from detected pitch.
    * Called continuously from audio engine.
    */
@@ -164,8 +153,8 @@ export class PianoSynthesizer {
     const pianoFreq = this.voiceToPianoFrequency(frequency);
 
     // Check if this is a new note (different from current)
-    const currentNote = this.frequencyToNoteName(this.currentFrequency);
-    const newNote = this.frequencyToNoteName(pianoFreq);
+    const currentNote = frequencyToNoteName(this.currentFrequency);
+    const newNote = frequencyToNoteName(pianoFreq);
 
     if (!this.isPlaying || currentNote !== newNote) {
       // Release old note and play new one
@@ -173,7 +162,7 @@ export class PianoSynthesizer {
       this.playNote(pianoFreq);
     }
 
-    const noteName = this.frequencyToNoteName(pianoFreq);
+    const noteName = frequencyToNoteName(pianoFreq);
     this.onNoteChanged?.(pianoFreq, noteName);
   }
 
@@ -288,7 +277,7 @@ export class PianoSynthesizer {
     }
 
     // Hammer strike transient using filtered noise
-    const noiseBuffer = this.createNoiseBuffer(0.05);
+    const noiseBuffer = createNoiseBuffer(this.audioContext!, 0.05);
     const noiseSource = ctx.createBufferSource();
     noiseSource.buffer = noiseBuffer;
 
@@ -367,7 +356,7 @@ export class PianoSynthesizer {
     }
 
     // Softer hammer strike
-    const noiseBuffer = this.createNoiseBuffer(0.03);
+    const noiseBuffer = createNoiseBuffer(this.audioContext!, 0.03);
     const noiseSource = ctx.createBufferSource();
     noiseSource.buffer = noiseBuffer;
 
@@ -627,23 +616,6 @@ export class PianoSynthesizer {
   }
 
   /**
-   * Create a buffer filled with white noise.
-   */
-  private createNoiseBuffer(duration: number): AudioBuffer {
-    const ctx = this.audioContext!;
-    const sampleRate = ctx.sampleRate;
-    const length = Math.ceil(sampleRate * duration);
-    const buffer = ctx.createBuffer(1, length, sampleRate);
-    const data = buffer.getChannelData(0);
-
-    for (let i = 0; i < length; i++) {
-      data[i] = Math.random() * 2 - 1;
-    }
-
-    return buffer;
-  }
-
-  /**
    * Release a specific voice.
    */
   private releaseVoice(voiceId: number): void {
@@ -779,7 +751,7 @@ export class PianoSynthesizer {
     this.playNote(pianoFreq, velocity);
 
     // Notify
-    const noteName = this.frequencyToNoteName(pianoFreq);
+    const noteName = frequencyToNoteName(pianoFreq);
     this.onNoteChanged?.(pianoFreq, noteName);
 
     console.log(
@@ -820,7 +792,7 @@ export class PianoSynthesizer {
     // Play directly (no transposition)
     this.playNote(frequency, velocity);
 
-    const noteName = this.frequencyToNoteName(frequency);
+    const noteName = frequencyToNoteName(frequency);
     this.onNoteChanged?.(frequency, noteName);
   }
 

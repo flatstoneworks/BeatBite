@@ -8,6 +8,8 @@
  * - Distortion: Adds grit and edge
  */
 
+import { createDistortionCurve } from './utils/audioUtils';
+
 export type EffectType = 'reverb' | 'delay' | 'chorus' | 'distortion';
 
 export interface EffectState {
@@ -187,7 +189,7 @@ export class VoiceEffects {
     const ctx = this.audioContext!;
 
     this.distortionNode = ctx.createWaveShaper();
-    this.distortionNode.curve = this.createDistortionCurve(this.state.distortion.amount);
+    this.distortionNode.curve = createDistortionCurve(this.state.distortion.amount);
     this.distortionNode.oversample = '2x';
 
     this.distortionGain = ctx.createGain();
@@ -196,23 +198,6 @@ export class VoiceEffects {
     this.inputNode!.connect(this.distortionNode);
     this.distortionNode.connect(this.distortionGain);
     this.distortionGain.connect(this.wetGain!);
-  }
-
-  /**
-   * Create distortion curve.
-   */
-  private createDistortionCurve(amount: number): Float32Array<ArrayBuffer> {
-    const samples = 44100;
-    const buffer = new ArrayBuffer(samples * 4);
-    const curve = new Float32Array(buffer);
-    const k = amount;
-
-    for (let i = 0; i < samples; i++) {
-      const x = (i * 2) / samples - 1;
-      curve[i] = ((3 + k) * x * 20 * (Math.PI / 180)) / (Math.PI + k * Math.abs(x));
-    }
-
-    return curve;
   }
 
   /**
@@ -309,7 +294,7 @@ export class VoiceEffects {
       case 'distortion':
         if (param === 'mix') this.updateMix();
         if (param === 'amount' && this.distortionNode) {
-          this.distortionNode.curve = this.createDistortionCurve(value);
+          this.distortionNode.curve = createDistortionCurve(value);
         }
         break;
     }
